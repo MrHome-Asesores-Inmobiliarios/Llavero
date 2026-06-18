@@ -18,6 +18,12 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.staticfiles",
+    "django.contrib.postgres",  # ArrayField, native-type support
+    # Llavero apps
+    "apps.common",
+    "apps.operators",
+    "apps.inventory",
+    "apps.vault",
 ]
 
 MIDDLEWARE = [
