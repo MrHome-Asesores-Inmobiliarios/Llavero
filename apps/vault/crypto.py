@@ -49,8 +49,12 @@ class DecryptionError(Exception):
     """
 
 
-def _wipe(buf: bytearray) -> None:
-    """Best-effort zeroisation of a mutable key buffer (see module note)."""
+def wipe_buffer(buf: bytearray) -> None:
+    """Best-effort zeroisation of a mutable key buffer (see module note).
+
+    Durable, guaranteed wiping of long-lived key material is P1-T8 (mlock +
+    sodium_memzero); this overwrites short-lived intermediates in place.
+    """
     for i in range(len(buf)):
         buf[i] = 0
 
@@ -82,7 +86,7 @@ def derive_kwk(passphrase: bytes, salt: bytes, params, second_factor: bytes) -> 
             encoder=nacl.encoding.RawEncoder,
         )
     finally:
-        _wipe(base)
+        wipe_buffer(base)
 
 
 def _aead_encrypt(plaintext: bytes, aad: bytes, key: bytes) -> tuple[bytes, bytes]:
@@ -128,7 +132,7 @@ def encrypt_secret(mk: bytes, plaintext: bytes, aad: bytes) -> dict:
         ciphertext, nonce = _aead_encrypt(plaintext, aad, bytes(dek))
         dek_wrapped, dek_nonce = _aead_encrypt(bytes(dek), b"", mk)
     finally:
-        _wipe(dek)
+        wipe_buffer(dek)
     return {
         "ciphertext": ciphertext,
         "nonce": nonce,
@@ -154,7 +158,7 @@ def decrypt_secret(
     try:
         return _aead_decrypt(ciphertext, aad, nonce, bytes(dek))
     finally:
-        _wipe(dek)
+        wipe_buffer(dek)
 
 
 # --- record-shaped layer (maps to the Secret storage fields) --------------

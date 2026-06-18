@@ -110,6 +110,12 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 LLAVERO_ARGON2_SCHEME_VERSION = 1
 LLAVERO_NACL_SCHEME_VERSION = 1
 
+# Vault second factor (Annex A 5.2, Annex G 4): "tpm" on the hardened server,
+# "keyfile" as the fallback. The keyfile MUST live off the backup path with
+# owner-only permissions; it holds the second factor only, never the MK.
+LLAVERO_SECOND_FACTOR_MODE = config("SECOND_FACTOR_MODE", default="keyfile")
+LLAVERO_KEYFILE_PATH = config("KEYFILE_PATH", default="")
+
 # Idle auto-lock: seconds of inactivity before the MK is wiped from memory.
 LLAVERO_IDLE_LOCK_SECONDS = config("IDLE_LOCK_SECONDS", default=900, cast=int)
 

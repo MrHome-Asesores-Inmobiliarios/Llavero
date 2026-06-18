@@ -59,3 +59,43 @@ cp deploy/nginx/llavero.conf /etc/nginx/sites-available/llavero
 ln -s /etc/nginx/sites-available/llavero /etc/nginx/sites-enabled/
 nginx -t && systemctl reload nginx
 ```
+
+## Vault second factor (P1-T7, finalised on the server — Annex A 5.2, G 4)
+
+The second factor is a 256-bit secret combined with each admin's Argon2id
+output to form the KWK. It MUST live off the backup path.
+
+### Preferred: TPM 2.0 seal (`SECOND_FACTOR_MODE=tpm`)
+
+Seal a 256-bit secret to the server TPM so it can only be unsealed on this
+machine (a stolen DB backup, without the hardware, cannot derive the MK):
+
+```bash
+# Generate + seal at install (example with tpm2-tools)
+head -c 32 /dev/urandom > /root/factor.bin
+tpm2_createprimary -C o -g sha256 -G ecc -c /etc/llavero/primary.ctx
+tpm2_create -C /etc/llavero/primary.ctx -i /root/factor.bin \
+    -u /etc/llavero/factor.pub -r /etc/llavero/factor.priv
+shred -u /root/factor.bin
+# At unlock: tpm2_load + tpm2_unseal recovers the 32 bytes on this host only.
+```
+
+Wire `TPMSecondFactor(sealed_blob=..., unseal_fn=...)` where `unseal_fn` shells
+out to `tpm2_unseal`. The sealed blob (`factor.pub`/`factor.priv`) is
+TPM-bound, so it may sit on disk; it is useless on other hardware.
+
+### Fallback: keyfile (`SECOND_FACTOR_MODE=keyfile`)
+
+```bash
+install -d -m 700 -o llavero -g llavero /etc/llavero
+# Provision via a one-off management shell:
+#   from apps.vault.second_factor import KeyfileSecondFactor
+#   KeyfileSecondFactor.provision("/etc/llavero/vault.keyfile")
+# It writes 32 bytes, 0600. Keep a copy in the safe with the recovery key,
+# NEVER alongside database backups.
+```
+
+Set `KEYFILE_PATH=/etc/llavero/vault.keyfile`.
+
+> Anti-lockout: a dead TPM or lost keyfile is recovered via the printed
+> recovery key (P1-T10), an independent wrap of the MK.
