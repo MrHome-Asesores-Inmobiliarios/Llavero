@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(python3:*)",
+      "Bash(pip:*)",
+      "Bash(pip3:*)",
+      "Bash(pytest:*)",
+      "Bash(python -m pytest:*)",
+      "Bash(python manage.py:*)",
+      "Bash(python3 manage.py:*)",
+      "Bash(black:*)",
+      "Bash(ruff:*)",
+      "Bash(mypy:*)",
+      "Bash(pre-commit:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(git switch:*)",
+      "Bash(git branch:*)",
+      "Bash(git init:*)",
+      "Bash(git restore:*)",
+      "Bash(git stash:*)",
+      "Bash(git merge:*)",
+      "Bash(createdb:*)",
+      "Bash(dropdb:*)",
+      "Bash(psql:*)"
+    ],
+    "deny": [
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(*.key)",
+      "Read(*.pem)",
+      "Read(*.age)",
+      "Read(*.gpg)",
+      "Read(*.pfx)",
+      "Read(*.p12)",
+      "Read(*keyfile*)",
+      "Read(secrets/**)",
+      "Read(backups/**)"
+    ]
+  }
+}
