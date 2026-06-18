@@ -12,7 +12,7 @@ future integration row.
 
 from django.db import models
 
-from apps.common.models import AuditedModel
+from apps.common.models import AuditedModel, UUIDModel
 
 
 class SecretOwnerType(models.TextChoices):
@@ -72,3 +72,44 @@ class Secret(AuditedModel):
 
     def __str__(self):
         return f"{self.kind} for {self.owner_type}:{self.owner_id}"
+
+
+class VaultKeyHolder(UUIDModel):
+    """Per-administrator wrapped copy of the single vault master key (Annex A 13).
+
+    One row per Administrator. The MK is wrapped under each admin's KWK
+    (KWK = combine(Argon2id(passphrase, salt, params), second factor)), so each
+    admin unlocks the same MK with their own credentials. Viewers never get a
+    row, which is what makes a Viewer session keyless.
+
+    Stores only the *wrapped* MK and the (non-secret) KDF parameters. The
+    second factor itself is never stored — ``second_factor_ref`` is just a
+    handle (keyfile id / TPM handle) resolved by the second-factor provider.
+    """
+
+    operator = models.OneToOneField(
+        "operators.Operator",
+        on_delete=models.PROTECT,
+        related_name="vault_key_holder",
+    )
+    kdf_salt = models.BinaryField()
+    kdf_memory = models.IntegerField()
+    kdf_iterations = models.IntegerField()
+    kdf_parallelism = models.IntegerField()
+    scheme_version = models.IntegerField(default=1)
+    mk_wrapped = models.BinaryField()
+    mk_nonce = models.BinaryField()
+    # Handle for the out-of-database second factor; NEVER the factor itself.
+    second_factor_ref = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(
+        "operators.Operator",
+        on_delete=models.PROTECT,
+        related_name="+",
+    )
+
+    class Meta:
+        db_table = "vault_key_holder"
+
+    def __str__(self):
+        return f"vault key holder for operator {self.operator_id}"

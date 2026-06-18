@@ -108,6 +108,23 @@ def wrap_master_key(mk: bytes, kwk: bytes) -> tuple[bytes, bytes]:
     return _aead_encrypt(mk, b"", kwk)
 
 
+def rewrap_dek(
+    old_mk: bytes, new_mk: bytes, dek_wrapped: bytes, dek_nonce: bytes
+) -> tuple[bytes, bytes]:
+    """Re-wrap a per-secret DEK from the old MK to a new MK (MK rotation).
+
+    Unwraps the DEK with ``old_mk`` and re-wraps it under ``new_mk``. The
+    secret's ciphertext, nonce, and AAD are unchanged — only the DEK wrapping
+    moves — so after rotation the old MK can no longer unwrap the live DEKs
+    (Annex A 9, 13). Returns (new_dek_wrapped, new_dek_nonce).
+    """
+    dek = bytearray(_aead_decrypt(dek_wrapped, b"", dek_nonce, old_mk))
+    try:
+        return _aead_encrypt(bytes(dek), b"", new_mk)
+    finally:
+        wipe_buffer(dek)
+
+
 def unwrap_master_key(mk_wrapped: bytes, mk_nonce: bytes, kwk: bytes) -> bytes:
     """Decrypt the wrapped MK. Raises DecryptionError if the KWK is wrong
     (wrong passphrase or wrong/absent second factor)."""
