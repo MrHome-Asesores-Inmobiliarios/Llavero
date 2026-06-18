@@ -1,6 +1,7 @@
 # --- Secrets and key material (NEVER commit) ---
 .env
 .env.*
+!.env.example
 *.key
 *.pem
 *.pfx

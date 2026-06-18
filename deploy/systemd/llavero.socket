@@ -1,0 +1,10 @@
+[Unit]
+Description=Llavero gunicorn socket
+
+[Socket]
+ListenStream=/run/llavero/gunicorn.sock
+SocketUser=www-data
+SocketMode=0660
+
+[Install]
+WantedBy=sockets.target

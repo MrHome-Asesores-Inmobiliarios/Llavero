@@ -1,0 +1,8 @@
+# Development / test / lint — extends base.
+-r base.txt
+black==25.1.0
+ruff==0.11.13
+pre-commit==4.2.0
+pytest==8.4.1
+pytest-django==4.11.1
+coverage==7.9.1

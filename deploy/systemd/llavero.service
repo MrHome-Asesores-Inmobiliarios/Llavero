@@ -1,0 +1,60 @@
+[Unit]
+Description=Llavero gunicorn application server
+Requires=llavero.socket
+After=network.target postgresql.service
+
+[Service]
+Type=notify
+
+# Run as a dedicated non-root service user.
+User=llavero
+Group=www-data
+
+WorkingDirectory=/opt/llavero
+Environment="DJANGO_SETTINGS_MODULE=llavero.settings.production"
+EnvironmentFile=/opt/llavero/.env
+
+ExecStart=/opt/llavero/.venv/bin/gunicorn \
+    --workers 2 \
+    --worker-class sync \
+    --bind unix:/run/llavero/gunicorn.sock \
+    --timeout 120 \
+    --access-logfile - \
+    --error-logfile - \
+    llavero.wsgi:application
+
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+Restart=on-failure
+
+# ---------------------------------------------------------------------------
+# Hardening (Annex G §5)
+# ---------------------------------------------------------------------------
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateDevices=true
+MemoryDenyWriteExecute=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+# Allow the app to mlock the master key buffer (Annex A §6).
+AmbientCapabilities=CAP_IPC_LOCK
+CapabilityBoundingSet=CAP_IPC_LOCK
+
+# Prevent core dumps — the MK must never appear in a dump (Annex A §7, G §2).
+LimitCORE=0
+
+# Syscall filter — drop anything the app never needs.
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources @raw-io @reboot @swap @debug @mount @cpu-emulation
+
+# Writable paths: runtime socket dir, log dir, media.
+# Everything else is read-only (ProtectSystem=strict).
+ReadWritePaths=/run/llavero /var/log/llavero /opt/llavero/media
+
+[Install]
+WantedBy=multi-user.target
