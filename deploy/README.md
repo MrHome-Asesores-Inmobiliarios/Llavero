@@ -60,6 +60,27 @@ ln -s /etc/nginx/sites-available/llavero /etc/nginx/sites-enabled/
 nginx -t && systemctl reload nginx
 ```
 
+## Append-only audit roles (P1-T11 — Annex B 5, G 5)
+
+The audit log is append-only, enforced two ways:
+
+1. A `BEFORE UPDATE OR DELETE` trigger on `audit_entry` / `audit_checkpoint`
+   (migration `audit/0002`) that raises — defence in depth, fires for all roles.
+2. Database role separation: a migration role owns the schema and runs DDL,
+   while the runtime app role has **INSERT/SELECT only** on the audit tables.
+
+Apply the role split once on the production DB:
+
+```bash
+psql -U postgres -f deploy/audit-roles.sql   # creates llavero_owner + llavero_app
+```
+
+Then set `DB_USER=llavero_owner` for `manage.py migrate` and
+`DB_USER=llavero_app` for the running app server. The `audit/0002` migration
+re-applies the audit-table grants to `llavero_app` whenever it runs, so they
+stay correct. A superuser can still bypass both layers — that residual risk is
+covered by the signed external checkpoints (P1-T13/T14).
+
 ## Vault second factor (P1-T7, finalised on the server — Annex A 5.2, G 4)
 
 The second factor is a 256-bit secret combined with each admin's Argon2id
