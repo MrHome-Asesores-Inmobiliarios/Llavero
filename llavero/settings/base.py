@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     "apps.common",
     "apps.operators",
     "apps.inventory",
+    "apps.relationships",
     "apps.vault",
 ]
 
