@@ -180,8 +180,12 @@ def remove_admin_and_rotate(
             holder.mk_nonce = mk_nonce
             holder.save(update_fields=["mk_wrapped", "mk_nonce"])
 
-        # NOTE (P1-T10): the independent printed-recovery-key wrap of the MK
-        # must also be re-wrapped here once it exists, or recovery would still
-        # point at the old MK.
+        # The printed-recovery-key wrap (P1-T10) points at the OLD MK and cannot
+        # be re-wrapped here (the recovery key is in the safe, not available).
+        # Invalidate it so the stale code can't recover a useless old MK; the
+        # caller must establish + print a new recovery key for the new MK.
+        from apps.vault.models import VaultRecoveryKey
+
+        VaultRecoveryKey.objects.all().delete()
 
     return new_mk

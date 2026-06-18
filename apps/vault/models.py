@@ -113,3 +113,32 @@ class VaultKeyHolder(UUIDModel):
 
     def __str__(self):
         return f"vault key holder for operator {self.operator_id}"
+
+
+class VaultRecoveryKey(UUIDModel):
+    """Independent wrap of the MK under the printed recovery key (Annex A 8).
+
+    Anti-lockout: if every Administrator credential (and the second factor) is
+    lost, the high-entropy recovery key — printed once and stored in the safe —
+    still unwraps the MK. The recovery key itself is NEVER stored; only the
+    wrapped MK and a non-secret ``fingerprint`` (to identify which printed key
+    is active) live here.
+    """
+
+    rk_wrapped = models.BinaryField()
+    rk_nonce = models.BinaryField()
+    # Non-secret one-way id of the active recovery key (safe to store/display).
+    fingerprint = models.TextField()
+    scheme_version = models.IntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(
+        "operators.Operator",
+        on_delete=models.PROTECT,
+        related_name="+",
+    )
+
+    class Meta:
+        db_table = "vault_recovery_key"
+
+    def __str__(self):
+        return f"vault recovery key {self.fingerprint}"

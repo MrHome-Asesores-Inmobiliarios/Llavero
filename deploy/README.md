@@ -99,3 +99,36 @@ Set `KEYFILE_PATH=/etc/llavero/vault.keyfile`.
 
 > Anti-lockout: a dead TPM or lost keyfile is recovered via the printed
 > recovery key (P1-T10), an independent wrap of the MK.
+
+## Printed recovery key (P1-T10 — Annex A 8)
+
+The recovery key is a 256-bit secret that wraps the MK independently of any
+admin credential. It is the last-resort anti-lockout path: if every admin
+passphrase and the second factor are lost, the printed key alone recovers the
+vault.
+
+Establish at install (and re-establish after any MK rotation), via a one-off
+management shell while an admin session holds the MK:
+
+```python
+from apps.vault import recovery
+code, row = recovery.establish_recovery_key(mk=<in-memory MK>, created_by=<admin>)
+print(code)   # shown ONCE
+```
+
+Procedure:
+1. **Print** the displayed code immediately. It is shown once and is never
+   stored in the database or written to a log.
+2. **Store the printout in the physical safe**, together with (not co-located
+   with backups) the keyfile if one is used. Two people should know the safe
+   location; the code itself is single-secret.
+3. **Verify before real data:** run a recovery drill (`recovery.recover_mk(code)`
+   returns the MK) — this is exercised by the P1-T10 tests now and validated end
+   to end at the **P4-T6 gate**. Do not load real secrets until P2-T6 and P4-T6
+   pass.
+4. **After MK rotation** (removing an admin, P1-T9): the old printed code is
+   invalidated automatically. Immediately establish and **re-print** a new
+   recovery key, then destroy the old printout.
+
+Only the wrapped MK + a non-secret fingerprint are stored in `vault_recovery_key`;
+the recovery key itself never touches disk.
