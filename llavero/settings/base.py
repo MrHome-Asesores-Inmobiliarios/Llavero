@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     "apps.vault",
     "apps.audit",
     "apps.backup",
+    "apps.integrations",
 ]
 
 MIDDLEWARE = [

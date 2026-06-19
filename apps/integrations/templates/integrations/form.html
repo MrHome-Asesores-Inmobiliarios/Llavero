@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}{{ action }} integración — Llavero{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>{{ action }} integración</h1>
+</div>
+
+<div class="card">
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-grid">
+      <div class="form-row">
+        <label for="{{ form.name.id_for_label }}">Nombre</label>
+        {{ form.name }}
+        {% if form.name.errors %}<ul class="errorlist">{% for e in form.name.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+      <div class="form-row">
+        <label for="{{ form.integration_type.id_for_label }}">Tipo</label>
+        {{ form.integration_type }}
+        {% if form.integration_type.errors %}<ul class="errorlist">{% for e in form.integration_type.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+      <div class="form-row">
+        <label for="{{ form.run_interval_minutes.id_for_label }}">Intervalo (minutos)</label>
+        {{ form.run_interval_minutes }}
+        <span class="helptext">Con qué frecuencia ejecutar esta integración (mín. 1 minuto).</span>
+        {% if form.run_interval_minutes.errors %}<ul class="errorlist">{% for e in form.run_interval_minutes.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+      <div class="form-row">
+        <label for="{{ form.credential.id_for_label }}">Credencial del vault</label>
+        {{ form.credential }}
+        <span class="helptext">Secreto del vault que contiene la credencial API. Solo se muestran secretos de tipo "integración" activos.</span>
+        {% if form.credential.errors %}<ul class="errorlist">{% for e in form.credential.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+    </div>
+
+    <div class="form-row" style="margin-top:1rem;">
+      <label>
+        {{ form.enabled }}
+        Activa
+      </label>
+      {% if form.enabled.errors %}<ul class="errorlist">{% for e in form.enabled.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+    </div>
+
+    <div class="form-row">
+      <label for="{{ form.config.id_for_label }}">Configuración (JSON)</label>
+      {{ form.config }}
+      <span class="helptext">
+        Objeto JSON con parámetros de endpoint. Ejemplos:<br>
+        Graph MFA: <code>{"tenant_id": "...", "client_id": "..."}</code><br>
+        WatchGuard: <code>{"host": "10.0.0.1", "snmp_user": "llavero", "auth_protocol": "SHA", "priv_protocol": "AES"}</code><br>
+        MikroTik: <code>{"host": "10.0.0.2", "port": 8729}</code><br>
+        UniFi: <code>{"base_url": "https://10.0.0.3:8443", "site": "default"}</code>
+      </span>
+      {% if form.config.errors %}<ul class="errorlist">{% for e in form.config.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+    </div>
+
+    {% if form.non_field_errors %}
+    <div class="alert alert-error">
+      {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">{{ action }}</button>
+      {% if integration %}
+      <a href="{% url 'integrations:detail' integration.pk %}" class="btn btn-secondary">Cancelar</a>
+      {% else %}
+      <a href="{% url 'integrations:list' %}" class="btn btn-secondary">Cancelar</a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -423,6 +423,10 @@
         <a href="/vault/new/" {% if request.resolver_match.url_name == "secret-create" %}class="active"{% endif %}>+ Nuevo secreto</a>
         {% endif %}
       </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Integraciones</div>
+        <a href="/integrations/" {% if request.resolver_match.namespace == "integrations" %}class="active"{% endif %}>Integraciones</a>
+      </div>
       {% if request.operator and request.operator.role == "administrator" %}
       <div class="sidebar-section">
         <div class="sidebar-label">Administracion</div>

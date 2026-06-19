@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Integraciones — Llavero{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Integraciones</h1>
+  <span class="spacer"></span>
+  {% if is_admin %}
+  <a href="{% url 'integrations:create' %}" class="btn btn-primary">+ Nueva integración</a>
+  {% endif %}
+</div>
+
+{% if integrations %}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Tipo</th>
+        <th>Estado</th>
+        <th>Última ejecución</th>
+        <th>Intervalo (min)</th>
+        <th>Activa</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for integration in integrations %}
+      <tr>
+        <td>
+          <a href="{% url 'integrations:detail' integration.pk %}">{{ integration.name }}</a>
+        </td>
+        <td>{{ integration.get_integration_type_display }}</td>
+        <td>
+          {% if integration.last_status == "ok" %}
+            <span class="badge" style="background:#d1fae5;color:#065f46;">OK</span>
+          {% elif integration.last_status == "error" %}
+            <span class="badge" style="background:#fee2e2;color:#991b1b;">Error</span>
+          {% else %}
+            <span class="badge" style="background:#f3f4f6;color:#6b7280;">Nunca</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if integration.last_run_at %}
+            {{ integration.last_run_at|date:"d/m/Y H:i" }}
+          {% else %}
+            <span style="color:var(--color-text-muted)">—</span>
+          {% endif %}
+        </td>
+        <td>{{ integration.run_interval_minutes }}</td>
+        <td>
+          {% if integration.enabled %}
+            <span class="badge" style="background:#d1fae5;color:#065f46;">Sí</span>
+          {% else %}
+            <span class="badge" style="background:#f3f4f6;color:#6b7280;">No</span>
+          {% endif %}
+        </td>
+        <td>
+          <a href="{% url 'integrations:detail' integration.pk %}" class="btn btn-secondary btn-sm">Ver</a>
+          {% if is_admin %}
+          <a href="{% url 'integrations:edit' integration.pk %}" class="btn btn-secondary btn-sm">Editar</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card">
+  <p style="color:var(--color-text-muted)">No hay integraciones configuradas aún.
+  {% if is_admin %}<a href="{% url 'integrations:create' %}">Crear la primera</a>.{% endif %}
+  </p>
+</div>
+{% endif %}
+{% endblock %}
