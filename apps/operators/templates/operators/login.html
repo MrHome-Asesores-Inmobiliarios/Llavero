@@ -1,0 +1,116 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar sesión — Llavero</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 14px;
+      background: #f5f6fa;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .login-card {
+      background: #fff;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 380px;
+    }
+    .login-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #1d4ed8;
+      margin-bottom: 0.25rem;
+      letter-spacing: -0.5px;
+    }
+    .login-sub {
+      font-size: 0.82rem;
+      color: #6b7280;
+      margin-bottom: 1.75rem;
+    }
+    .form-row { margin-bottom: 1rem; }
+    .form-row label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 0.3rem;
+      font-size: 0.875rem;
+    }
+    .form-row input {
+      width: 100%;
+      padding: 0.45rem 0.65rem;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      background: #fff;
+      color: #111827;
+      transition: border-color 0.15s;
+    }
+    .form-row input:focus {
+      outline: none;
+      border-color: #1d4ed8;
+      box-shadow: 0 0 0 2px rgba(29,78,216,.15);
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 0.55rem;
+      background: #1d4ed8;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 1.5rem;
+      transition: background 0.1s;
+    }
+    .btn:hover { background: #1e40af; }
+    .error {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+      padding: 0.65rem 0.85rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      margin-bottom: 1.25rem;
+    }
+    .help { font-size: 0.75rem; color: #6b7280; margin-top: 0.2rem; }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="login-title">Llavero</div>
+    <div class="login-sub">Sistema de credenciales MrHome</div>
+
+    {% if error %}
+      <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-row">
+        <label for="username">Usuario</label>
+        <input type="text" id="username" name="username" autofocus autocomplete="username" required>
+      </div>
+      <div class="form-row">
+        <label for="password">Contraseña</label>
+        <input type="password" id="password" name="password" autocomplete="current-password" required>
+      </div>
+      <div class="form-row">
+        <label for="totp_code">Código TOTP</label>
+        <input type="text" id="totp_code" name="totp_code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required>
+        <div class="help">Código de 6 dígitos de su aplicación autenticadora.</div>
+      </div>
+      <button type="submit" class="btn">Iniciar sesión</button>
+    </form>
+  </div>
+</body>
+</html>

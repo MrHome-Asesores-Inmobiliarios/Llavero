@@ -1,0 +1,90 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configurar vault — Llavero</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 14px;
+      background: #f5f6fa;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 420px;
+    }
+    .title { font-size: 1.2rem; font-weight: 700; color: #1d4ed8; margin-bottom: 0.25rem; }
+    .sub { font-size: 0.82rem; color: #6b7280; margin-bottom: 1.5rem; }
+    .notice {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e40af;
+      padding: 0.75rem 1rem;
+      border-radius: 4px;
+      font-size: 0.82rem;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .form-row { margin-bottom: 1rem; }
+    .form-row label { display: block; font-weight: 500; margin-bottom: 0.3rem; font-size: 0.875rem; }
+    .form-row input {
+      width: 100%;
+      padding: 0.45rem 0.65rem;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      background: #fff;
+    }
+    .form-row input:focus { outline: none; border-color: #1d4ed8; box-shadow: 0 0 0 2px rgba(29,78,216,.15); }
+    .help { font-size: 0.75rem; color: #6b7280; margin-top: 0.2rem; }
+    .btn {
+      display: block; width: 100%; padding: 0.55rem;
+      background: #1d4ed8; color: #fff; border: none; border-radius: 4px;
+      font-size: 0.9rem; font-weight: 600; cursor: pointer; margin-top: 1.5rem;
+    }
+    .btn:hover { background: #1e40af; }
+    .error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.65rem 0.85rem; border-radius: 4px; font-size: 0.85rem; margin-bottom: 1.25rem; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="title">Configurar vault</div>
+    <div class="sub">Primera vez — establezca la frase de contraseña maestra</div>
+
+    <div class="notice">
+      <strong>Esta frase de contraseña protege todas las credenciales.</strong><br>
+      Elija una frase larga y única. Anótela y guárdela en lugar físico seguro —
+      si la pierde, necesitará la clave de recuperación impresa.
+    </div>
+
+    {% if error %}
+      <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-row">
+        <label for="passphrase">Frase de contraseña</label>
+        <input type="password" id="passphrase" name="passphrase" autocomplete="new-password" autofocus required>
+        <div class="help">Mínimo 12 caracteres.</div>
+      </div>
+      <div class="form-row">
+        <label for="passphrase_confirm">Confirmar frase</label>
+        <input type="password" id="passphrase_confirm" name="passphrase_confirm" autocomplete="new-password" required>
+      </div>
+      <button type="submit" class="btn">Instalar vault e iniciar sesión</button>
+    </form>
+  </div>
+</body>
+</html>
