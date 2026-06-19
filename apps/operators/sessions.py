@@ -17,6 +17,7 @@ P1-T19 slice).
 import hashlib
 import secrets
 import threading
+import time
 
 import nacl.encoding
 import nacl.hash
@@ -24,6 +25,7 @@ from django.db import connection, transaction
 from django.utils import timezone
 
 from apps.operators.models import Operator, OperatorSession
+from apps.operators.stepup import StepUp
 from apps.vault.memory import MasterKeyHolder
 
 # Constant advisory-lock key (signed 64-bit) serialising logins across
@@ -35,8 +37,11 @@ LOGIN_LOCK_KEY = int.from_bytes(
 )
 
 # Process-global holder for the single privileged session's master key, plus a
-# lock guarding in-memory holder access across threads.
+# lock guarding in-memory holder access across threads. ``_stepup`` is the
+# step-up state for the current privileged session (reset on each login).
 _holder_instance: MasterKeyHolder | None = None
+_stepup_instance: StepUp | None = None
+_holder_clock = time.monotonic
 _HOLDER_LOCK = threading.Lock()
 
 
@@ -47,8 +52,41 @@ class SessionError(Exception):
 def _holder() -> MasterKeyHolder:
     global _holder_instance
     if _holder_instance is None:
-        _holder_instance = MasterKeyHolder()
+        _holder_instance = MasterKeyHolder(clock=_holder_clock)
     return _holder_instance
+
+
+def configure_holder(*, idle_seconds=None, clock=None) -> None:
+    """(Re)create the master-key holder, e.g. at startup or in tests.
+
+    Wipes any current MK first. ``clock`` lets tests drive idle auto-lock.
+    """
+    global _holder_instance, _holder_clock
+    with _HOLDER_LOCK:
+        if _holder_instance is not None:
+            _holder_instance.lock()
+        _holder_clock = clock or time.monotonic
+        _holder_instance = MasterKeyHolder(idle_seconds=idle_seconds, clock=_holder_clock)
+
+
+def current_step_up() -> StepUp:
+    """The step-up state for the active privileged session."""
+    global _stepup_instance
+    if _stepup_instance is None:
+        _stepup_instance = StepUp()
+    return _stepup_instance
+
+
+def touch() -> None:
+    """Record activity, postponing idle auto-lock."""
+    with _HOLDER_LOCK:
+        _holder().touch()
+
+
+def enforce_idle() -> bool:
+    """Wipe the MK if the idle window elapsed. Returns True if now locked."""
+    with _HOLDER_LOCK:
+        return _holder().enforce_idle()
 
 
 def _hash_token(token: str) -> str:
@@ -85,6 +123,8 @@ def establish_session(*, operator: Operator, ip: str, mk: bytearray | bytes | No
                 operator=operator, token_hash=_hash_token(token), ip=ip
             )
 
+        global _stepup_instance
+        _stepup_instance = StepUp()  # fresh step-up state per session
         holder = _holder()
         if operator.role == Operator.Role.ADMINISTRATOR:
             holder.unlock(bytearray(mk))
