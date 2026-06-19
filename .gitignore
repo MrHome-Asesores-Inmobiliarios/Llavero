@@ -12,6 +12,8 @@
 keyfile*
 recovery-key*
 *recovery*key*
+# migrations may have 'recovery' or 'key' in their name -- always track them
+!apps/*/migrations/*.py
 secrets/
 local_settings.py
 
