@@ -1,0 +1,17 @@
+[Unit]
+Description=Run Llavero database backup daily at 02:00 (local time)
+Documentation=https://github.com/mrhome/llavero deploy/backup/
+
+[Timer]
+# Daily at 02:00 local time. Santo Domingo is UTC-4, so this is 06:00 UTC.
+OnCalendar=*-*-* 02:00:00
+# Catch up if the machine was off at the scheduled time.
+Persistent=true
+# Randomise start within a 5-minute window to avoid thundering-herd if multiple
+# hosts run this timer.
+RandomizedDelaySec=300
+# Only one instance runs at a time.
+Unit=llavero-backup.service
+
+[Install]
+WantedBy=timers.target

@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     "apps.relationships",
     "apps.vault",
     "apps.audit",
+    "apps.backup",
 ]
 
 MIDDLEWARE = [
@@ -128,3 +129,18 @@ LLAVERO_HANDOVER_IDLE_YIELD_SECONDS = config("HANDOVER_IDLE_YIELD_SECONDS", defa
 LLAVERO_HANDOVER_GRACE_SECONDS = config("HANDOVER_GRACE_SECONDS", default=300, cast=int)
 LLAVERO_HANDOVER_EXTEND_SECONDS = config("HANDOVER_EXTEND_SECONDS", default=600, cast=int)
 LLAVERO_HANDOVER_RELEASE_LOCK_SECONDS = config("HANDOVER_RELEASE_LOCK_SECONDS", default=5, cast=int)
+
+# ---------------------------------------------------------------------------
+# Backup (Phase 2, Annex H)
+# ---------------------------------------------------------------------------
+
+# Path where backup.sh writes its JSON result after every run.
+LLAVERO_BACKUP_STATUS_PATH = config("BACKUP_STATUS_PATH", default="")
+
+# Local directory holding the encrypted archive files (*.age).
+LLAVERO_BACKUP_ARCHIVE_DIR = config(
+    "BACKUP_ARCHIVE_DIR", default="/var/backups/llavero/archive"
+)
+
+# Hours after which a backup is considered overdue (default: 24 h + 2 h grace).
+LLAVERO_BACKUP_OVERDUE_HOURS = config("BACKUP_OVERDUE_HOURS", default=26, cast=int)

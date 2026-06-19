@@ -185,3 +185,126 @@ Procedure:
 
 Only the wrapped MK + a non-secret fingerprint are stored in `vault_recovery_key`;
 the recovery key itself never touches disk.
+
+---
+
+## Backup system (P2-T1..T5 — Annex H)
+
+The backup system runs `pg_dump` daily, encrypts with `age` (asymmetric), and
+ships the encrypted dump to three destinations. The server holds **only the
+backup public key** — a fully compromised server can create backups but cannot
+decrypt them.
+
+### Security constraint (P2-T3, Annex H 5)
+
+These three items MUST be in the physical safe, NEVER stored with the backups:
+
+| Item | Why |
+|---|---|
+| Backup private key (`llavero-backup-private.key`) | Decrypts every backup |
+| Vault recovery key (printout) | Unlocks the vault on new hardware |
+| Keyfile (`vault.keyfile`) if used | Second factor for the vault KWK |
+
+Storing any of these alongside the backups would let a single theft undo the
+entire encryption scheme.
+
+### One-time key generation (run on an offline machine)
+
+```bash
+# On the offline/admin machine — NOT on the server
+chmod +x deploy/backup/backup-keygen.sh
+./deploy/backup/backup-keygen.sh /path/to/safe-mount
+
+# Output:
+#   llavero-backup-private.key  ← into the safe
+#   llavero-backup.pub          ← copy to the server
+```
+
+Install the public key on the server:
+
+```bash
+install -d -m 750 -o root -g llavero /etc/llavero
+install -m 644 -o root -g llavero llavero-backup.pub /etc/llavero/backup.pub
+```
+
+### Configure the backup environment
+
+```bash
+# Copy and fill in the template
+cp deploy/backup/backup.env.example /etc/llavero/backup.env
+chmod 640 /etc/llavero/backup.env
+chown root:llavero /etc/llavero/backup.env
+# Edit LLAVERO_BACKUP_HOST1/2/3, DB credentials, paths
+```
+
+### Create required directories
+
+```bash
+install -d -m 750 -o llavero -g llavero \
+    /var/backups/llavero/staging \
+    /var/backups/llavero/archive
+install -d -m 750 -o llavero -g llavero /var/log/llavero
+```
+
+### SSH access to backup destinations (three copies, Annex H 4)
+
+Each destination host needs a `backup` user with a write-only rsync target:
+
+```bash
+# On each destination host
+useradd -r -s /usr/sbin/nologin backup
+install -d -m 730 -o backup -g backup /srv/llavero-backups
+# Restrict the backup user's SSH key to rsync only (authorized_keys):
+#   command="rsync --server ...",no-pty,no-port-forwarding,no-X11-forwarding ssh-ed25519 ...
+```
+
+### Install the systemd timer
+
+```bash
+cp deploy/backup/llavero-backup.service /etc/systemd/system/
+cp deploy/backup/llavero-backup.timer   /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now llavero-backup.timer
+# Verify:
+systemctl list-timers llavero-backup.timer
+```
+
+### GFS retention (Annex H 6)
+
+The timer calls `backup.sh` which runs `manage.py backup_prune` after shipping:
+
+| Bucket | Retention |
+|---|---|
+| Daily | Last 14 days |
+| Weekly | Latest backup per ISO week, last 8 weeks |
+| Monthly | Latest backup per calendar month, last 12 months |
+| Audit chain | **Never pruned** |
+
+Apply the same rules on each destination host (see `manage.py backup_prune --help`).
+
+### Backup monitoring (P2-T5, Annex H 10)
+
+`backup.sh` writes a JSON status file after every run and ships it to the
+separate host. Check backup health:
+
+```bash
+# On the server or the separate host
+manage.py backup_status        # exits 0 if OK, 1 if overdue/failed
+# Output: {"overdue": false, "last_backup": "...", "hours_since": 1.2}
+```
+
+The `backup_overdue` alert rule (Annex E extensible catalog) will surface this
+in the dashboard when Phase 6 alert tables are built. Until then, check via:
+
+```bash
+# Cron or systemd path — alert if exit 1
+/opt/llavero/.venv/bin/python /opt/llavero/manage.py backup_status \
+    || echo "BACKUP OVERDUE — check /var/log/llavero/backup-status.json"
+```
+
+### Manual test-run
+
+```bash
+# Run as the llavero user (dry-run: pipe to /dev/null instead of shipping)
+sudo -u llavero LLAVERO_BACKUP_HOST1=... /opt/llavero/deploy/backup/backup.sh
+```
