@@ -149,3 +149,34 @@ def tick(request, *, now=None, draft_saver=None) -> SessionRequest:
     if idle_elapsed >= idle_yield or now >= request.expires_at:
         _grant(request, by=None, now=now, draft_saver=draft_saver)  # auto-transfer
     return request
+
+
+# ---------------------------------------------------------------------------
+# Pure UI-state helpers (P7-T3)
+# These are stateless — pass ``seconds_remaining`` from the caller.
+# ---------------------------------------------------------------------------
+
+
+def color_state(seconds_remaining: float) -> str:
+    """Return the countdown-bar colour for the given seconds remaining.
+
+    Returns one of:
+    - ``"red"``    — < 20 s
+    - ``"amber"``  — < 60 s
+    - ``"normal"`` — anything else
+    """
+    if seconds_remaining < 20:
+        return "red"
+    if seconds_remaining < 60:
+        return "amber"
+    return "normal"
+
+
+def is_release_locked(grace_elapsed_seconds: float) -> bool:
+    """True for the first LLAVERO_HANDOVER_RELEASE_LOCK_SECONDS of the grace period.
+
+    The release button is disabled for this window so it cannot be dismissed
+    reflexively (Annex D 8, handover module docstring).
+    """
+    _, _, _, release_lock = _cfg()
+    return grace_elapsed_seconds < release_lock
