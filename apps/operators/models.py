@@ -128,6 +128,35 @@ class OperatorSession(UUIDModel):
         self.save(update_fields=["last_activity_at"])
 
 
+class OperatorTotpDevice(models.Model):
+    """Operator TOTP second-factor seed (Annex D 1; pyotp fallback).
+
+    The seed is a LOGIN factor verified before the vault is unlocked, so it
+    cannot be encrypted under the master key (chicken-and-egg). It is encrypted
+    at rest under a login key derived from the server second factor (keyfile /
+    TPM), which the server process has at login time. A database-only breach
+    without the second factor therefore cannot read the seed.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    operator = models.OneToOneField(
+        Operator,
+        on_delete=models.PROTECT,
+        related_name="totp_device",
+    )
+    # Envelope-encrypted seed (XChaCha20-Poly1305 + wrapped DEK), under the
+    # login key — never the master key, never plaintext.
+    ciphertext = models.BinaryField()
+    nonce = models.BinaryField()
+    dek_wrapped = models.BinaryField()
+    dek_nonce = models.BinaryField()
+    confirmed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "operator_totp_device"
+
+
 class SessionRequestState(models.TextChoices):
     PENDING = "pending", "Pending"
     GRANTED = "granted", "Granted"
