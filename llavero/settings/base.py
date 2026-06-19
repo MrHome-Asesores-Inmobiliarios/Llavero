@@ -17,6 +17,7 @@ INSTALLED_APPS = [
     # Django internals — no built-in admin; operator model replaces auth.User
     "django.contrib.contenttypes",
     "django.contrib.sessions",
+    "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.postgres",  # ArrayField, native-type support
     # Llavero apps
@@ -36,6 +37,7 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
@@ -49,6 +51,7 @@ TEMPLATES = [
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.request",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
