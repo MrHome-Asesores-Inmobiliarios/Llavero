@@ -60,6 +60,38 @@ ln -s /etc/nginx/sites-available/llavero /etc/nginx/sites-enabled/
 nginx -t && systemctl reload nginx
 ```
 
+## Off-box checkpoint anchor (P1-T14 — Annex G 7, B 2)
+
+Each signed checkpoint is copied to a **separate internal host** (P0-T9) in an
+append-only store the app can write to but cannot modify or delete. With the
+printed copy in the safe, that gives two independent references the database
+process cannot rewrite — the defence against an attacker who rewrites both the
+DB chain and the DB checkpoint row.
+
+The app writes through the `AnchorStore` interface (`apps/audit/anchor.py`).
+The dev stand-in is `AppendOnlyFileAnchorStore` (one read-only file per
+checkpoint). On the server, point it at an OS-enforced append-only target, e.g.:
+
+- **Append-only syslog** to the separate host (the app has send-only access), or
+- a **WORM / `chattr +a`** directory on the separate host that the app role can
+  create files in but not modify or unlink:
+
+```bash
+# On the separate host, app role can append but not delete/modify:
+install -d -m 730 -o llavero_app -g llavero /srv/llavero-anchors   # write+execute, no read/delete for others
+chattr +a /srv/llavero-anchors        # append-only directory (root sets this)
+```
+
+Verify periodically with `anchor.verify_offbox_anchor(store, trusted_public_key=...)`
+where the trusted key is the enrolled admin credential / configured offline key.
+
+### Printed checkpoint copy (kept in the safe)
+
+At least daily (and at each session end), print the latest checkpoint —
+`seq`, `head_hash` (hex), `signature` (hex), `signer`, `created_at` — and store
+the printout in the safe alongside the recovery key. A printed copy cannot be
+altered by any online attacker and is the ultimate anchor for a dispute.
+
 ## Append-only audit roles (P1-T11 — Annex B 5, G 5)
 
 The audit log is append-only, enforced two ways:
