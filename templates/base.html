@@ -416,6 +416,13 @@
         <a href="/inventory/devices/" {% if request.resolver_match.url_name|slice:":6" == "device" %}class="active"{% endif %}>Dispositivos</a>
         <a href="/inventory/offices/" {% if request.resolver_match.url_name|slice:":6" == "office" %}class="active"{% endif %}>Oficinas</a>
       </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Secretos</div>
+        <a href="/vault/" {% if request.resolver_match.url_name|slice:":6" == "secret" %}class="active"{% endif %}>Secretos</a>
+        {% if request.operator and request.operator.role == "administrator" %}
+        <a href="/vault/new/" {% if request.resolver_match.url_name == "secret-create" %}class="active"{% endif %}>+ Nuevo secreto</a>
+        {% endif %}
+      </div>
       {% if request.operator and request.operator.role == "administrator" %}
       <div class="sidebar-section">
         <div class="sidebar-label">Administracion</div>
