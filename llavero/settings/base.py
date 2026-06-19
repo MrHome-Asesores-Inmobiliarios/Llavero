@@ -122,3 +122,9 @@ LLAVERO_IDLE_LOCK_SECONDS = config("IDLE_LOCK_SECONDS", default=900, cast=int)
 
 # Step-up reauth window for bulk/export actions (~2 min, open point Annex D 10).
 LLAVERO_STEPUP_WINDOW_SECONDS = config("STEPUP_WINDOW_SECONDS", default=120, cast=int)
+
+# Session handover — hybrid B+C chosen config (Annex D 8).
+LLAVERO_HANDOVER_IDLE_YIELD_SECONDS = config("HANDOVER_IDLE_YIELD_SECONDS", default=120, cast=int)
+LLAVERO_HANDOVER_GRACE_SECONDS = config("HANDOVER_GRACE_SECONDS", default=300, cast=int)
+LLAVERO_HANDOVER_EXTEND_SECONDS = config("HANDOVER_EXTEND_SECONDS", default=600, cast=int)
+LLAVERO_HANDOVER_RELEASE_LOCK_SECONDS = config("HANDOVER_RELEASE_LOCK_SECONDS", default=5, cast=int)
