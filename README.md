@@ -62,27 +62,37 @@ pre-commit install
 
 ```
 apps/
-  audit/        hash-chain audit log, signed checkpoints
-  backup/       GFS retention, restore verification, recovery drill
-  vault/        envelope encryption, master key lifecycle, recovery key
-  operators/    authentication, WebAuthn/TOTP, session management
+  audit/          hash-chain audit log, signed checkpoints
+  backup/         GFS retention, restore verification, recovery drill
+  vault/          envelope encryption, master key lifecycle, recovery key, secrets UI
+  operators/      authentication, WebAuthn/TOTP, session management
+  inventory/      CRUD for persons, accounts, devices, offices, custom fields
+  relationships/  nine typed join tables between entities
+  integrations/   Graph MFA pull, WatchGuard/MikroTik/UniFi monitoring, telemetry
+  alerts/         13-rule alert engine, dashboard, self-monitoring (E-13)
 deploy/
-  backup/       backup.sh, restore.sh, systemd timer, RESTORE-DRILL.md
-  hardening/    nginx, systemd unit, firewall notes
-tests/          pytest suite (244 tests, Phase 1 + Phase 2)
+  backup/         backup.sh, restore.sh, systemd timer, RESTORE-DRILL.md
+  RELEASE-CHECKLIST.md
+static/js/        htmx.min.js (vendored)
+templates/        base layout + per-app templates
+tests/            442-test pytest suite covering all phases
 ```
 
 Spec documents live at the repo root: `Annex-A` through `Annex-I`, `00-Master-Index-and-Decision-Registry.md`, and `Preliminary-Design-Credentials-and-Asset-System.md`. Decisions D-01..D-33 in the master index are locked — raise before redesigning.
 
 ## Build status
 
-| Phase | Status |
-|---|---|
-| 0 — Infrastructure | Ops (hardened server, LUKS2, VPN) |
-| 1 — Security spine | ✅ Done (209 tests) |
-| 2 — Backups | ✅ Automated done (244 tests) · Manual drill pending |
-| 3 — Inventory UI | Not started |
-| 4 — Secrets UI + gate | Not started |
-| 5 — Integrations | Not started |
-| 6 — Alerts & dashboard | Not started |
-| 7 — Release gate | Not started |
+| Phase | Code | Tests |
+|---|---|---|
+| 0 — Infrastructure | Ops — hardened server, LUKS2, VPN, separate host | — |
+| 1 — Security spine | ✅ Done | 209 |
+| 2 — Backups | ✅ Automated done · Manual drill pending | 244 |
+| 3 — Inventory UI | ✅ Done | 290 |
+| 4 — Secrets UI + recovery gate | ✅ Done | 321 |
+| 5 — Integrations | ✅ Done | 334 |
+| 6 — Alerts & dashboard | ✅ Done | 368 |
+| 7 — Release gate (code) | ✅ Done | 442 |
+
+**Remaining before go-live** (all operator tasks on the hardened server):
+Argon2id calibration · TPM sealing · manual P2-T6 restore drill · full DR drill (P7-T1) · load real data (P7-T5).
+See `deploy/RELEASE-CHECKLIST.md` for the sign-off checklist.
