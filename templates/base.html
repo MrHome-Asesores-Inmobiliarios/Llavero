@@ -434,6 +434,10 @@
       <strong>{{ request.operator.display_name }}</strong>
       &mdash; {{ request.operator.get_role_display }}
     </span>
+    <form method="post" action="/auth/logout/" style="margin:0">
+      {% csrf_token %}
+      <button type="submit" style="background:none;border:none;color:#6b7280;font-size:0.8rem;cursor:pointer;padding:0.25rem 0.5rem;">Cerrar sesión</button>
+    </form>
     {% endif %}
   </header>
 

@@ -15,7 +15,6 @@ Security invariants:
   failure — it grants no privilege by itself.
 """
 
-from django.contrib import messages
 from django.shortcuts import redirect, render
 from django.views import View
 from django.views.decorators.http import require_POST
@@ -191,7 +190,6 @@ class VaultInstallView(View):
             _log_vault_unlock(operator, session)
 
         _finalize_session(request, operator, session, token)
-        messages.success(request, "Vault instalado. Guarde la frase de contraseña en lugar seguro.")
         return redirect("/")
 
 
