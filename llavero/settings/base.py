@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     "apps.audit",
     "apps.backup",
     "apps.integrations",
+    "apps.alerts",
 ]
 
 MIDDLEWARE = [
@@ -145,3 +146,10 @@ LLAVERO_BACKUP_ARCHIVE_DIR = config(
 
 # Hours after which a backup is considered overdue (default: 24 h + 2 h grace).
 LLAVERO_BACKUP_OVERDUE_HOURS = config("BACKUP_OVERDUE_HOURS", default=26, cast=int)
+
+# ---------------------------------------------------------------------------
+# Alert engine (Phase 6, Annex E)
+# ---------------------------------------------------------------------------
+
+# How often the evaluator runs (in minutes). Default: 15.
+LLAVERO_ALERT_EVAL_INTERVAL_MINUTES = config("ALERT_EVAL_INTERVAL_MINUTES", default=15, cast=int)

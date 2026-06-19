@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Configuración de Alertas · Llavero{% endblock %}
+
+{% block content %}
+<style>
+  .integrity-strip {
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 4px;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.8rem;
+    color: #0369a1;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .settings-table th, .settings-table td { vertical-align: middle; }
+  .toggle-on  { color: #16a34a; font-weight: 600; }
+  .toggle-off { color: #dc2626; font-weight: 600; }
+</style>
+
+<div class="integrity-strip">
+  <span>&#128274;</span>
+  <span>
+    Cadena auditada hasta seq <strong>{{ audit_entry_count }}</strong>
+    {% if latest_checkpoint %}
+      &middot; último checkpoint: <strong>{{ latest_checkpoint.created_at|date:"Y-m-d H:i" }}</strong>
+    {% else %}
+      &middot; sin checkpoint
+    {% endif %}
+  </span>
+</div>
+
+<div class="page-header">
+  <h1>Configuración de Alertas</h1>
+  <span class="spacer"></span>
+  <a href="{% url 'alerts:dashboard' %}" class="btn btn-secondary btn-sm">&#8592; Dashboard</a>
+</div>
+
+<div class="table-wrap">
+  <table class="settings-table">
+    <thead>
+      <tr>
+        <th>Regla</th>
+        <th>Descripción</th>
+        <th>Habilitada</th>
+        <th>Umbral (JSON)</th>
+        <th>Última modificación</th>
+        {% if request.operator.role == "administrator" %}
+        <th></th>
+        {% endif %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for setting in settings %}
+      <tr>
+        <td><strong>{{ setting.rule_id }}</strong></td>
+        <td>{{ setting.get_rule_id_display }}</td>
+        <td>
+          {% if setting.enabled %}
+            <span class="toggle-on">Si</span>
+          {% else %}
+            <span class="toggle-off">No</span>
+          {% endif %}
+        </td>
+        <td><code>{{ setting.threshold_json }}</code></td>
+        <td>
+          {% if setting.updated_by %}
+            {{ setting.updated_at|date:"Y-m-d H:i" }} por {{ setting.updated_by.display_name }}
+          {% else %}
+            &mdash;
+          {% endif %}
+        </td>
+        {% if request.operator.role == "administrator" %}
+        <td>
+          <a href="{% url 'alerts:settings-edit' setting.rule_id %}" class="btn btn-secondary btn-sm">Editar</a>
+        </td>
+        {% endif %}
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" style="text-align:center;color:var(--color-text-muted);padding:2rem">Sin configuración</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

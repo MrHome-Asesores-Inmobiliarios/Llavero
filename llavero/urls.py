@@ -25,6 +25,8 @@ def health(request):
 
 urlpatterns = [
     path("health/", health, name="health"),
+    # Alerts dashboard at root (P6-T5); also exposes /alerts/settings/
+    path("", include("apps.alerts.urls")),
     path("inventory/", include("apps.inventory.urls")),
     path("relationships/", include("apps.relationships.urls")),
     path("vault/", include("apps.vault.urls")),

@@ -25,6 +25,34 @@
       --header-height: 52px;
     }
 
+    /* Integrity strip (P6-T6) */
+    .integrity-strip-global {
+      background: #f0f9ff;
+      border-bottom: 1px solid #bae6fd;
+      padding: 0.3rem 1rem;
+      font-size: 0.75rem;
+      color: #0369a1;
+      position: fixed;
+      top: var(--header-height);
+      left: var(--sidebar-width);
+      right: 0;
+      z-index: 90;
+    }
+
+    /* Alert badge on sidebar */
+    .alert-badge {
+      display: inline-block;
+      background: #dc2626;
+      color: #fff;
+      border-radius: 999px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 0.05rem 0.4rem;
+      margin-left: 0.4rem;
+      line-height: 1.4;
+      vertical-align: middle;
+    }
+
     body {
       font-family: system-ui, -apple-system, sans-serif;
       font-size: 14px;
@@ -126,6 +154,8 @@
       flex: 1;
       padding: 1.5rem 2rem;
       max-width: 1200px;
+      /* Space for integrity strip when present */
+      margin-top: 28px;
     }
 
     /* Page header */
@@ -407,8 +437,30 @@
     {% endif %}
   </header>
 
+  {# Global integrity strip (P6-T6) — NOT audited, system monitoring #}
+  {% if audit_entry_count is not None %}
+  <div class="integrity-strip-global">
+    &#128274; Cadena auditada hasta seq <strong>{{ audit_entry_count }}</strong>
+    {% if latest_checkpoint %}
+      &middot; último checkpoint: <strong>{{ latest_checkpoint.created_at|date:"Y-m-d H:i" }}</strong>
+    {% else %}
+      &middot; sin checkpoint
+    {% endif %}
+  </div>
+  {% endif %}
+
   <div class="layout">
     <nav class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Alertas</div>
+        <a href="/" {% if request.resolver_match.url_name == "alerts:dashboard" or request.resolver_match.namespace == "alerts" and request.resolver_match.url_name == "dashboard" %}class="active"{% elif request.path == "/" %}class="active"{% endif %}>
+          Dashboard
+          {# Open alert count badge — injected by the view context #}
+          {% if open_alert_count and open_alert_count > 0 %}
+            <span class="alert-badge">{{ open_alert_count }}</span>
+          {% endif %}
+        </a>
+      </div>
       <div class="sidebar-section">
         <div class="sidebar-label">Inventario</div>
         <a href="/inventory/persons/" {% if request.resolver_match.url_name|slice:":6" == "person" %}class="active"{% endif %}>Personas</a>
