@@ -1,0 +1,14 @@
+{% comment %}Renders a colored state badge. Usage: {% include "inventory/_state_badge.html" with state=entity.state %}{% endcomment %}
+{% if state == "active" or state == "in_use" %}
+  <span class="badge" style="background:#d1fae5;color:#065f46;">{{ state }}</span>
+{% elif state == "disabled" or state == "decommissioned" or state == "terminated" or state == "closed" %}
+  <span class="badge" style="background:#fee2e2;color:#991b1b;">{{ state }}</span>
+{% elif state == "compromised" %}
+  <span class="badge" style="background:#fef3c7;color:#92400e;">{{ state }}</span>
+{% elif state == "needs_rotation" or state == "pending_repair" or state == "broken" or state == "in_setup" %}
+  <span class="badge" style="background:#fef9c3;color:#854d0e;">{{ state }}</span>
+{% elif state == "suspended" or state == "offboarding" or state == "in_storage" %}
+  <span class="badge" style="background:#e0e7ff;color:#3730a3;">{{ state }}</span>
+{% else %}
+  <span class="badge" style="background:#f3f4f6;color:#374151;">{{ state }}</span>
+{% endif %}

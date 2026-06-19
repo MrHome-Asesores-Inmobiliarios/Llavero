@@ -1,0 +1,37 @@
+{% comment %}
+HTMX partial: form for creating a relationship link.
+Usage: include with context variables:
+  link_type: e.g. "account_ownership"
+  source_pk: UUID of the source entity
+  target_label: display label for target selector
+  qualifier_field: optional field name (role, purpose, channel, nature)
+  qualifier_choices: list of (value, label) tuples
+{% endcomment %}
+<form method="post" action="{% url 'link-create' %}"
+      hx-post="{% url 'link-create' %}"
+      hx-target="body"
+      style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:flex-end;margin-top:0.75rem;">
+  {% csrf_token %}
+  <input type="hidden" name="link_type" value="{{ link_type }}">
+  <input type="hidden" name="source_pk" value="{{ source_pk }}">
+
+  <div class="form-row" style="margin:0;flex:1;min-width:200px;">
+    <label style="font-size:0.8rem;">{{ target_label }}</label>
+    <input type="text" name="target_pk" placeholder="UUID del destino"
+           style="width:100%;padding:0.35rem 0.6rem;border:1px solid #d1d5db;border-radius:4px;font-size:0.85rem;">
+  </div>
+
+  {% if qualifier_field and qualifier_choices %}
+  <div class="form-row" style="margin:0;">
+    <label style="font-size:0.8rem;">{{ qualifier_field|capfirst }}</label>
+    <select name="{{ qualifier_field }}"
+            style="padding:0.35rem 0.6rem;border:1px solid #d1d5db;border-radius:4px;font-size:0.85rem;">
+      {% for val, display in qualifier_choices %}
+      <option value="{{ val }}">{{ display }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  {% endif %}
+
+  <button type="submit" class="btn btn-primary btn-sm" style="margin-bottom:0;">Crear enlace</button>
+</form>

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Cuentas - Llavero{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Cuentas</h1>
+  <span class="spacer"></span>
+  {% if not viewer %}
+  <a class="btn btn-primary" href="{% url 'account-create' %}">Nueva cuenta</a>
+  {% endif %}
+</div>
+
+<form class="search-bar" method="get" hx-get="{% url 'account-list' %}" hx-target="body" hx-push-url="true">
+  <input type="text" name="q" value="{{ q }}" placeholder="Buscar por etiqueta o identificador...">
+  <button type="submit" class="btn btn-secondary">Buscar</button>
+  {% if q %}<a class="btn btn-secondary" href="{% url 'account-list' %}">Limpiar</a>{% endif %}
+</form>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Etiqueta</th>
+        <th>Identificador</th>
+        <th>Tipo</th>
+        <th>MFA</th>
+        <th>Estado</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for account in accounts %}
+      <tr>
+        <td><a href="{% url 'account-detail' account.pk %}">{{ account.label }}</a></td>
+        <td>{{ account.identifier }}</td>
+        <td>{{ account.get_account_type_display }}</td>
+        <td>{{ account.get_mfa_state_display }}</td>
+        <td>{% include "inventory/_state_badge.html" with state=account.state %}</td>
+        <td>
+          {% if not viewer %}
+          <a class="btn btn-secondary btn-sm" href="{% url 'account-edit' account.pk %}">Editar</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" style="text-align:center;color:#6b7280;padding:2rem;">Sin resultados.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}{{ action }} dispositivo - Llavero{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>{{ action }} dispositivo{% if device %}: {{ device }}{% endif %}</h1>
+</div>
+
+<div class="card">
+  <form method="post">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+    <div class="alert alert-error">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <div class="form-grid">
+      {% for field in form %}
+      <div class="form-row">
+        <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+        {{ field }}
+        {% if field.help_text %}<div class="helptext">{{ field.help_text }}</div>{% endif %}
+        {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+
+    <h3 style="margin:1.25rem 0 0.75rem;font-size:0.95rem;border-top:1px solid #e5e7eb;padding-top:1rem;">Detalle de red (opcional)</h3>
+    <div class="form-grid">
+      {% for field in net_form %}
+      <div class="form-row">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if custom_fields %}
+    <h3 style="margin:1.25rem 0 0.75rem;font-size:0.95rem;border-top:1px solid #e5e7eb;padding-top:1rem;">Campos personalizados</h3>
+    <div class="form-grid">
+      {% for fd in custom_fields %}
+      <div class="form-row">
+        <label for="cf_{{ fd.key }}">{{ fd.label }}{% if fd.required %} *{% endif %}</label>
+        <input type="text" id="cf_{{ fd.key }}" name="cf_{{ fd.key }}" value="">
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">{{ action }}</button>
+      {% if device %}
+      <a class="btn btn-secondary" href="{% url 'device-detail' device.pk %}">Cancelar</a>
+      {% else %}
+      <a class="btn btn-secondary" href="{% url 'device-list' %}">Cancelar</a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+{% endblock %}

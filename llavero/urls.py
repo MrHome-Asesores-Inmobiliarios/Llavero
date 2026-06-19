@@ -16,7 +16,7 @@ Including another URLconf
 """
 
 from django.http import HttpResponse
-from django.urls import path
+from django.urls import include, path
 
 
 def health(request):
@@ -25,4 +25,6 @@ def health(request):
 
 urlpatterns = [
     path("health/", health, name="health"),
+    path("inventory/", include("apps.inventory.urls")),
+    path("relationships/", include("apps.relationships.urls")),
 ]

@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}{{ account.label }} - Llavero{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>{{ account.label }}</h1>
+  {% include "inventory/_state_badge.html" with state=account.state %}
+  <span class="spacer"></span>
+  {% if not viewer %}
+  <a class="btn btn-secondary" href="{% url 'account-edit' account.pk %}">Editar</a>
+  {% endif %}
+</div>
+
+<div class="card">
+  <div class="detail-grid">
+    <div class="detail-item">
+      <label>Etiqueta</label>
+      <span>{{ account.label }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Identificador</label>
+      <span>{{ account.identifier }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Tipo</label>
+      <span>{{ account.get_account_type_display }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Estado MFA</label>
+      <span>{{ account.get_mfa_state_display }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Tipos de MFA</label>
+      <span>{{ account.mfa_types|join:", "|default:"-" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Email de recuperacion</label>
+      <span>{{ account.recovery_email|default:"-" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Telefono de recuperacion</label>
+      <span>{{ account.recovery_phone|default:"-" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Ultimo cambio de contrasena</label>
+      <span>{{ account.last_password_change|default:"-" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Fuente externa</label>
+      <span>{{ account.external_source|default:"-" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>ID externo</label>
+      <span>{{ account.external_id|default:"-" }}</span>
+    </div>
+    {% if account.notes %}
+    <div class="detail-item" style="grid-column:1/-1;">
+      <label>Notas</label>
+      <span>{{ account.notes }}</span>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% if not viewer %}
+<div class="card">
+  <h3 style="margin-bottom:0.75rem;font-size:0.95rem;">Cambiar estado</h3>
+  <form method="post" action="{% url 'account-transition' account.pk %}">
+    {% csrf_token %}
+    <div style="display:flex;gap:0.5rem;align-items:center;">
+      <select name="new_state" style="padding:0.4rem 0.6rem;border:1px solid #d1d5db;border-radius:4px;font-size:0.875rem;">
+        <option value="active">active</option>
+        <option value="disabled">disabled</option>
+        <option value="compromised">compromised</option>
+        <option value="needs_rotation">needs_rotation</option>
+      </select>
+      <button type="submit" class="btn btn-secondary btn-sm">Aplicar</button>
+    </div>
+  </form>
+</div>
+{% endif %}
+
+<div class="card">
+  <h3 style="margin-bottom:0.75rem;font-size:0.95rem;">Propietarios</h3>
+  {% if ownerships %}
+  <ul style="list-style:none;padding:0;">
+    {% for o in ownerships %}
+    <li style="padding:0.3rem 0;border-bottom:1px solid #f3f4f6;">
+      <a href="{% url 'person-detail' o.person.pk %}">{{ o.person }}</a>
+      <span style="font-size:0.75rem;color:#6b7280;">({{ o.role }})</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p style="color:#6b7280;font-size:0.875rem;">Sin propietarios activos.</p>
+  {% endif %}
+
+  <h3 style="margin:1rem 0 0.75rem;font-size:0.95rem;">Configurado en dispositivos</h3>
+  {% if device_configs %}
+  <ul style="list-style:none;padding:0;">
+    {% for dc in device_configs %}
+    <li style="padding:0.3rem 0;border-bottom:1px solid #f3f4f6;">
+      <a href="{% url 'device-detail' dc.device.pk %}">{{ dc.device }}</a>
+      <span style="font-size:0.75rem;color:#6b7280;">({{ dc.purpose }})</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p style="color:#6b7280;font-size:0.875rem;">Sin configuraciones de dispositivo.</p>
+  {% endif %}
+
+  <h3 style="margin:1rem 0 0.75rem;font-size:0.95rem;">Contactos de recuperacion</h3>
+  {% if recovery_contacts %}
+  <ul style="list-style:none;padding:0;">
+    {% for rc in recovery_contacts %}
+    <li style="padding:0.3rem 0;border-bottom:1px solid #f3f4f6;">
+      <a href="{% url 'person-detail' rc.person.pk %}">{{ rc.person }}</a>
+      <span style="font-size:0.75rem;color:#6b7280;">({{ rc.channel }})</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p style="color:#6b7280;font-size:0.875rem;">Sin contactos de recuperacion.</p>
+  {% endif %}
+</div>
+
+<p style="font-size:0.78rem;color:#9ca3af;margin-top:0.5rem;">
+  Creado: {{ account.created_at|date:"Y-m-d H:i" }} | Actualizado: {{ account.updated_at|date:"Y-m-d H:i" }}
+</p>
+{% endblock %}

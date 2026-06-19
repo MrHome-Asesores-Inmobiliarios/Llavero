@@ -1,0 +1,441 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Llavero{% endblock %}</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --color-bg: #f5f6fa;
+      --color-surface: #ffffff;
+      --color-border: #d1d5db;
+      --color-text: #111827;
+      --color-text-muted: #6b7280;
+      --color-primary: #1d4ed8;
+      --color-primary-hover: #1e40af;
+      --color-sidebar-bg: #1e293b;
+      --color-sidebar-text: #cbd5e1;
+      --color-sidebar-active: #3b82f6;
+      --color-sidebar-hover: #334155;
+      --color-danger: #dc2626;
+      --sidebar-width: 220px;
+      --header-height: 52px;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 14px;
+      color: var(--color-text);
+      background: var(--color-bg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--header-height);
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      padding: 0 1rem;
+      z-index: 100;
+      gap: 1rem;
+    }
+
+    .header-brand {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-decoration: none;
+      letter-spacing: -0.5px;
+    }
+
+    .header-spacer { flex: 1; }
+
+    .header-user {
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+    }
+
+    .header-user strong {
+      color: var(--color-text);
+    }
+
+    /* Layout */
+    .layout {
+      display: flex;
+      margin-top: var(--header-height);
+      min-height: calc(100vh - var(--header-height));
+    }
+
+    /* Sidebar */
+    nav.sidebar {
+      position: fixed;
+      top: var(--header-height);
+      left: 0;
+      bottom: 0;
+      width: var(--sidebar-width);
+      background: var(--color-sidebar-bg);
+      overflow-y: auto;
+      padding: 1rem 0;
+    }
+
+    .sidebar-section {
+      margin-bottom: 0.5rem;
+    }
+
+    .sidebar-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+      padding: 0.25rem 1rem 0.25rem;
+    }
+
+    .sidebar a {
+      display: block;
+      padding: 0.5rem 1rem;
+      color: var(--color-sidebar-text);
+      text-decoration: none;
+      border-left: 3px solid transparent;
+      transition: background 0.1s, color 0.1s;
+    }
+
+    .sidebar a:hover {
+      background: var(--color-sidebar-hover);
+      color: #f1f5f9;
+    }
+
+    .sidebar a.active {
+      background: var(--color-sidebar-hover);
+      color: #f1f5f9;
+      border-left-color: var(--color-sidebar-active);
+    }
+
+    /* Main content */
+    main {
+      margin-left: var(--sidebar-width);
+      flex: 1;
+      padding: 1.5rem 2rem;
+      max-width: 1200px;
+    }
+
+    /* Page header */
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .page-header h1 {
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+
+    .page-header .spacer { flex: 1; }
+
+    /* Cards */
+    .card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Tables */
+    .table-wrap {
+      overflow-x: auto;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 0.6rem 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    th {
+      background: #f9fafb;
+      font-weight: 600;
+      font-size: 0.82rem;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f9fafb; }
+
+    /* Buttons */
+    .btn {
+      display: inline-block;
+      padding: 0.4rem 0.9rem;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-decoration: none;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: background 0.1s;
+      line-height: 1.4;
+    }
+
+    .btn-primary {
+      background: var(--color-primary);
+      color: #fff;
+      border-color: var(--color-primary);
+    }
+
+    .btn-primary:hover { background: var(--color-primary-hover); }
+
+    .btn-secondary {
+      background: var(--color-surface);
+      color: var(--color-text);
+      border-color: var(--color-border);
+    }
+
+    .btn-secondary:hover { background: #f3f4f6; }
+
+    .btn-danger {
+      background: var(--color-danger);
+      color: #fff;
+      border-color: var(--color-danger);
+    }
+
+    .btn-sm {
+      padding: 0.25rem 0.6rem;
+      font-size: 0.8rem;
+    }
+
+    /* Forms */
+    .form-row {
+      margin-bottom: 1rem;
+    }
+
+    .form-row label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 0.3rem;
+      font-size: 0.875rem;
+    }
+
+    .form-row input[type="text"],
+    .form-row input[type="email"],
+    .form-row input[type="date"],
+    .form-row input[type="number"],
+    .form-row select,
+    .form-row textarea {
+      width: 100%;
+      padding: 0.45rem 0.65rem;
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      font-size: 0.875rem;
+      background: var(--color-surface);
+      color: var(--color-text);
+      transition: border-color 0.15s;
+    }
+
+    .form-row input:focus,
+    .form-row select:focus,
+    .form-row textarea:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.15);
+    }
+
+    .form-row textarea { min-height: 80px; resize: vertical; }
+
+    .form-row .helptext {
+      font-size: 0.78rem;
+      color: var(--color-text-muted);
+      margin-top: 0.2rem;
+    }
+
+    .form-row .errorlist {
+      list-style: none;
+      color: var(--color-danger);
+      font-size: 0.8rem;
+      margin-top: 0.2rem;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 0 1.25rem;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--color-border);
+    }
+
+    /* State badges */
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    /* Search bar */
+    .search-bar {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .search-bar input {
+      flex: 1;
+      max-width: 360px;
+      padding: 0.4rem 0.65rem;
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      font-size: 0.875rem;
+      background: var(--color-surface);
+    }
+
+    /* Detail sections */
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 0.75rem 1.5rem;
+    }
+
+    .detail-item label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-text-muted);
+      margin-bottom: 0.15rem;
+    }
+
+    .detail-item span {
+      display: block;
+      font-size: 0.9rem;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      border-bottom: 2px solid var(--color-border);
+      margin-bottom: 1rem;
+      gap: 0;
+    }
+
+    .tab-link {
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: color 0.1s, border-color 0.1s;
+    }
+
+    .tab-link:hover { color: var(--color-text); }
+
+    .tab-link.active {
+      color: var(--color-primary);
+      border-bottom-color: var(--color-primary);
+    }
+
+    /* Alerts */
+    .alert {
+      padding: 0.75rem 1rem;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+      font-size: 0.875rem;
+    }
+
+    .alert-error {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+    }
+
+    .alert-success {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #166534;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      nav.sidebar {
+        position: static;
+        width: 100%;
+        height: auto;
+      }
+      main { margin-left: 0; }
+      .layout { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="header-brand" href="/">Llavero</a>
+    <span class="header-spacer"></span>
+    {% if request.operator %}
+    <span class="header-user">
+      <strong>{{ request.operator.display_name }}</strong>
+      &mdash; {{ request.operator.get_role_display }}
+    </span>
+    {% endif %}
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Inventario</div>
+        <a href="/inventory/persons/" {% if request.resolver_match.url_name|slice:":6" == "person" %}class="active"{% endif %}>Personas</a>
+        <a href="/inventory/accounts/" {% if request.resolver_match.url_name|slice:":7" == "account" %}class="active"{% endif %}>Cuentas</a>
+        <a href="/inventory/devices/" {% if request.resolver_match.url_name|slice:":6" == "device" %}class="active"{% endif %}>Dispositivos</a>
+        <a href="/inventory/offices/" {% if request.resolver_match.url_name|slice:":6" == "office" %}class="active"{% endif %}>Oficinas</a>
+      </div>
+      {% if request.operator and request.operator.role == "administrator" %}
+      <div class="sidebar-section">
+        <div class="sidebar-label">Administracion</div>
+        <a href="/inventory/field-definitions/" {% if request.resolver_match.url_name|slice:":15" == "fielddefinition" %}class="active"{% endif %}>Definiciones de campo</a>
+      </div>
+      {% endif %}
+    </nav>
+
+    <main>
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert {% if message.tags == 'error' %}alert-error{% else %}alert-success{% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <script src="{% static 'js/htmx.min.js' %}"></script>
+</body>
+</html>
