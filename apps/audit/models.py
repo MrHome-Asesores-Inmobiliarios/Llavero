@@ -143,6 +143,7 @@ class AuditCheckpoint(models.Model):
         related_name="+",
     )
     signature = models.BinaryField(null=True, blank=True)  # over head_hash (P1-T13)
+    signature_algo = models.TextField(blank=True, default="")  # e.g. "ed25519", "webauthn"
     signer = models.TextField(blank=True, default="")
     external_anchor_ref = models.TextField(blank=True, default="")
 

@@ -11,8 +11,9 @@ rewrite the whole chain) is layered on in P1-T13.
 
 from dataclasses import dataclass
 
+from apps.audit import signing
 from apps.audit.chain import ZERO32, compute_entry_hash, payload_for
-from apps.audit.models import AuditEntry
+from apps.audit.models import AuditCheckpoint, AuditEntry
 
 
 @dataclass(frozen=True)
@@ -22,6 +23,15 @@ class ChainStatus:
     seq: int | None = None
     head_seq: int = 0
     head_hash: bytes = ZERO32
+
+
+@dataclass(frozen=True)
+class AnchorStatus:
+    ok: bool
+    reason: str | None = None
+    seq: int | None = None
+    anchored: bool = False
+    chain_head_seq: int = 0
 
 
 def verify_chain(entries=None) -> ChainStatus:
@@ -45,3 +55,49 @@ def verify_chain(entries=None) -> ChainStatus:
         expected_seq += 1
 
     return ChainStatus(True, head_seq=head_seq, head_hash=prev)
+
+
+def verify_with_anchor(*, trusted_public_key: bytes, algo: str | None = None) -> AnchorStatus:
+    """Walk the chain, then check it against the latest signed checkpoint.
+
+    ``trusted_public_key`` is the key the caller independently trusts (the
+    enrolled admin credential or the configured offline key) — NOT one read from
+    the checkpoint, which an attacker could replace. A valid-walking chain whose
+    entry at the checkpoint seq no longer matches the signed head hash was
+    rewritten after the checkpoint.
+    """
+    chain = verify_chain()
+    if not chain.ok:
+        return AnchorStatus(
+            False, chain.reason, chain.seq, anchored=False, chain_head_seq=chain.head_seq
+        )
+
+    checkpoint = AuditCheckpoint.objects.exclude(signature=None).order_by("-seq").first()
+    if checkpoint is None:
+        return AnchorStatus(True, anchored=False, chain_head_seq=chain.head_seq)
+
+    if not signing.verify_signature(
+        algo or checkpoint.signature_algo,
+        trusted_public_key,
+        bytes(checkpoint.head_hash),
+        bytes(checkpoint.signature),
+    ):
+        return AnchorStatus(
+            False,
+            "bad_checkpoint_signature",
+            checkpoint.seq,
+            anchored=True,
+            chain_head_seq=chain.head_seq,
+        )
+
+    anchored_entry = AuditEntry.objects.filter(seq=checkpoint.seq).first()
+    if anchored_entry is None or bytes(anchored_entry.entry_hash) != bytes(checkpoint.head_hash):
+        return AnchorStatus(
+            False,
+            "rewritten_after_checkpoint",
+            checkpoint.seq,
+            anchored=True,
+            chain_head_seq=chain.head_seq,
+        )
+
+    return AnchorStatus(True, anchored=True, chain_head_seq=chain.head_seq)
