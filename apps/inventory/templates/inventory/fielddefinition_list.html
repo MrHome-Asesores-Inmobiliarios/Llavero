@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Definiciones de campo - Llavero{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Definiciones de campo</h1>
+  <span class="spacer"></span>
+  <a class="btn btn-primary" href="{% url 'fielddefinition-create' %}">Nueva definicion</a>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Entidad</th>
+        <th>Clave</th>
+        <th>Etiqueta</th>
+        <th>Tipo</th>
+        <th>Requerido</th>
+        <th>Visible (Viewer)</th>
+        <th>Orden</th>
+        <th>Activo</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for fd in field_defs %}
+      <tr>
+        <td>{{ fd.entity_type }}</td>
+        <td><code>{{ fd.key }}</code></td>
+        <td>{{ fd.label }}</td>
+        <td>{{ fd.data_type }}</td>
+        <td>{% if fd.required %}Si{% else %}No{% endif %}</td>
+        <td>{% if fd.viewer_visible %}Si{% else %}No{% endif %}</td>
+        <td>{{ fd.display_order }}</td>
+        <td>{% if fd.active %}Si{% else %}No{% endif %}</td>
+        <td>
+          <a class="btn btn-secondary btn-sm" href="{% url 'fielddefinition-edit' fd.pk %}">Editar</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="9" style="text-align:center;color:#6b7280;padding:2rem;">Sin definiciones.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

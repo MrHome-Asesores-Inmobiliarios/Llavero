@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Editar Configuración {{ setting.rule_id }} · Llavero{% endblock %}
+
+{% block content %}
+<style>
+  .integrity-strip {
+    background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 4px;
+    padding: 0.45rem 0.9rem; font-size: 0.8rem; color: #0369a1;
+    margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;
+  }
+</style>
+
+<div class="integrity-strip">
+  <span>&#128274;</span>
+  <span>
+    Cadena auditada hasta seq <strong>{{ audit_entry_count }}</strong>
+    {% if latest_checkpoint %}
+      &middot; último checkpoint: <strong>{{ latest_checkpoint.created_at|date:"Y-m-d H:i" }}</strong>
+    {% else %}
+      &middot; sin checkpoint
+    {% endif %}
+  </span>
+</div>
+
+<div class="page-header">
+  <h1>Editar: {{ setting.rule_id }}</h1>
+  <span class="spacer"></span>
+  <a href="{% url 'alerts:settings' %}" class="btn btn-secondary btn-sm">&#8592; Configuración</a>
+</div>
+
+<p style="color:var(--color-text-muted);margin-bottom:1rem;">{{ rule_label }}</p>
+
+<div class="card" style="max-width:540px">
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-row">
+      <label for="id_enabled">Habilitada</label>
+      {{ form.enabled }}
+      {% if form.enabled.errors %}<ul class="errorlist">{% for e in form.enabled.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+    </div>
+    <div class="form-row">
+      <label for="id_threshold_json">Umbral (JSON)</label>
+      {{ form.threshold_json }}
+      <p class="helptext">Ejemplo: <code>{"days": 90}</code>. Vacío para reglas sin umbral configurable.</p>
+      {% if form.threshold_json.errors %}<ul class="errorlist">{% for e in form.threshold_json.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Guardar</button>
+      <a href="{% url 'alerts:settings' %}" class="btn btn-secondary">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

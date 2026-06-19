@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}{{ integration.name }} — Integraciones — Llavero{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>{{ integration.name }}</h1>
+  <span class="spacer"></span>
+  {% if is_admin %}
+  <a href="{% url 'integrations:edit' integration.pk %}" class="btn btn-secondary">Editar</a>
+  <form method="post" action="{% url 'integrations:toggle' integration.pk %}" style="display:inline;">
+    {% csrf_token %}
+    <button type="submit" class="btn {% if integration.enabled %}btn-secondary{% else %}btn-primary{% endif %}">
+      {% if integration.enabled %}Desactivar{% else %}Activar{% endif %}
+    </button>
+  </form>
+  <form method="post" action="{% url 'integrations:run' integration.pk %}" style="display:inline;">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-primary" title="Ejecutar ahora (sin credenciales de vault; use el comando run_integrations para ejecución completa)">
+      Ejecutar ahora
+    </button>
+  </form>
+  {% endif %}
+</div>
+
+<div class="card">
+  <div class="detail-grid">
+    <div class="detail-item">
+      <label>Tipo</label>
+      <span>{{ integration.get_integration_type_display }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Estado</label>
+      <span>
+        {% if integration.last_status == "ok" %}
+          <span class="badge" style="background:#d1fae5;color:#065f46;">OK</span>
+        {% elif integration.last_status == "error" %}
+          <span class="badge" style="background:#fee2e2;color:#991b1b;">Error</span>
+        {% else %}
+          <span class="badge" style="background:#f3f4f6;color:#6b7280;">Nunca ejecutada</span>
+        {% endif %}
+      </span>
+    </div>
+    <div class="detail-item">
+      <label>Activa</label>
+      <span>{% if integration.enabled %}Sí{% else %}No{% endif %}</span>
+    </div>
+    <div class="detail-item">
+      <label>Intervalo</label>
+      <span>{{ integration.run_interval_minutes }} minutos</span>
+    </div>
+    <div class="detail-item">
+      <label>Última ejecución</label>
+      <span>{% if integration.last_run_at %}{{ integration.last_run_at|date:"d/m/Y H:i:s" }}{% else %}—{% endif %}</span>
+    </div>
+    <div class="detail-item">
+      <label>Credencial</label>
+      <span>
+        {% if integration.credential %}
+          {{ integration.credential.label|default:"—" }} ({{ integration.credential.kind }})
+        {% else %}
+          <span style="color:var(--color-text-muted)">Sin credencial</span>
+        {% endif %}
+      </span>
+    </div>
+  </div>
+  {% if integration.last_error %}
+  <div class="alert alert-error" style="margin-top:1rem;">
+    <strong>Último error:</strong> {{ integration.last_error }}
+  </div>
+  {% endif %}
+</div>
+
+<h2 style="font-size:1rem;font-weight:600;margin:1.5rem 0 0.75rem;">
+  Telemetría reciente (últimas 50 entradas)
+</h2>
+
+{% if telemetry %}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Fecha</th>
+        <th>Tipo de evento</th>
+        <th>Dispositivo / Cuenta</th>
+        <th>Valor anterior</th>
+        <th>Valor nuevo</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for entry in telemetry %}
+      <tr>
+        <td style="white-space:nowrap;">{{ entry.recorded_at|date:"d/m/Y H:i:s" }}</td>
+        <td>
+          {% if entry.event_type == "health_change" %}
+            <span class="badge" style="background:#dbeafe;color:#1e40af;">Cambio de salud</span>
+          {% elif entry.event_type == "mfa_change" %}
+            <span class="badge" style="background:#fef3c7;color:#92400e;">Cambio MFA</span>
+          {% elif entry.event_type == "unmatched_account" %}
+            <span class="badge" style="background:#fee2e2;color:#991b1b;">Cuenta sin match</span>
+          {% elif entry.event_type == "run_ok" %}
+            <span class="badge" style="background:#d1fae5;color:#065f46;">Ejecución OK</span>
+          {% elif entry.event_type == "run_error" %}
+            <span class="badge" style="background:#fee2e2;color:#991b1b;">Ejecución error</span>
+          {% else %}
+            {{ entry.event_type }}
+          {% endif %}
+        </td>
+        <td>
+          {% if entry.device %}
+            {{ entry.device.hostname|default:entry.device.id }}
+          {% elif entry.account %}
+            {{ entry.account.label }} ({{ entry.account.identifier }})
+          {% else %}
+            <span style="color:var(--color-text-muted)">—</span>
+          {% endif %}
+        </td>
+        <td style="font-family:monospace;font-size:0.8rem;">{{ entry.old_value }}</td>
+        <td style="font-family:monospace;font-size:0.8rem;">{{ entry.new_value }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card">
+  <p style="color:var(--color-text-muted)">No hay registros de telemetría aún.</p>
+</div>
+{% endif %}
+
+<div style="margin-top:1rem;">
+  <a href="{% url 'integrations:list' %}" class="btn btn-secondary">Volver a integraciones</a>
+</div>
+{% endblock %}

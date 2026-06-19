@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+{% block title %}Dashboard de Alertas · Llavero{% endblock %}
+
+{% block content %}
+<style>
+  /* Integrity strip */
+  .integrity-strip {
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 4px;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.8rem;
+    color: #0369a1;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .integrity-strip .icon { font-size: 0.9rem; }
+
+  /* Severity summary cards */
+  .severity-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  .sev-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    padding: 0.9rem 1rem;
+    text-align: center;
+  }
+  .sev-card .count { font-size: 1.6rem; font-weight: 700; line-height: 1; }
+  .sev-card .label { font-size: 0.75rem; color: var(--color-text-muted); margin-top: 0.2rem; }
+  .sev-critical .count { color: #dc2626; }
+  .sev-high .count { color: #ea580c; }
+  .sev-medium .count { color: #ca8a04; }
+  .sev-low .count { color: #16a34a; }
+
+  /* Alert rows */
+  .alert-row {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .alert-row .sev-badge {
+    min-width: 70px;
+    text-align: center;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+  }
+  .sev-badge.critical { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+  .sev-badge.high     { background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; }
+  .sev-badge.medium   { background: #fefce8; color: #713f12; border: 1px solid #fde68a; }
+  .sev-badge.low      { background: #f0fdf4; color: #14532d; border: 1px solid #bbf7d0; }
+
+  .status-badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.15rem 0.45rem;
+    border-radius: 999px;
+    border: 1px solid var(--color-border);
+    background: #f9fafb;
+    color: var(--color-text-muted);
+  }
+  .status-badge.acknowledged { background: #eff6ff; color: #1e40af; border-color: #bfdbfe; }
+  .status-badge.open { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
+
+  .alert-body { flex: 1; min-width: 0; }
+  .alert-rule { font-weight: 600; font-size: 0.9rem; }
+  .alert-meta { font-size: 0.78rem; color: var(--color-text-muted); margin-top: 0.2rem; }
+  .alert-actions { display: flex; gap: 0.5rem; align-items: center; flex-shrink: 0; }
+
+  /* Inline acknowledge form */
+  .ack-form { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.75rem; }
+  .ack-form textarea { width: 100%; padding: 0.4rem 0.6rem; border: 1px solid var(--color-border); border-radius: 4px; font-size: 0.8rem; resize: vertical; min-height: 52px; }
+  .ack-form-row { display: flex; gap: 0.4rem; align-items: flex-start; }
+  .ack-form-row textarea { flex: 1; }
+  .ack-hidden { display: none; }
+
+  /* Filters */
+  .filter-bar {
+    display: flex; flex-wrap: wrap; gap: 0.5rem;
+    margin-bottom: 1.25rem;
+    align-items: center;
+  }
+  .filter-bar select, .filter-bar input {
+    padding: 0.35rem 0.6rem;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    font-size: 0.85rem;
+    background: var(--color-surface);
+  }
+  .filter-bar label { font-size: 0.82rem; color: var(--color-text-muted); }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+  }
+</style>
+
+{# Integrity strip (P6-T6) #}
+<div class="integrity-strip">
+  <span class="icon">&#128274;</span>
+  <span>
+    Cadena auditada hasta seq <strong>{{ audit_entry_count }}</strong>
+    {% if latest_checkpoint %}
+      &nbsp;&middot;&nbsp; último checkpoint: <strong>{{ latest_checkpoint.created_at|date:"Y-m-d H:i" }}</strong>
+    {% else %}
+      &nbsp;&middot;&nbsp; sin checkpoint
+    {% endif %}
+  </span>
+</div>
+
+<div class="page-header">
+  <h1>Alertas</h1>
+  <span class="spacer"></span>
+  {% if request.operator.role == "administrator" %}
+  <form method="post" action="{% url 'alerts:evaluate' %}" style="margin:0">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-secondary btn-sm">Evaluar ahora</button>
+  </form>
+  {% endif %}
+  {% if request.operator.role == "administrator" %}
+  <a href="{% url 'alerts:settings' %}" class="btn btn-secondary btn-sm">Configuración</a>
+  {% endif %}
+</div>
+
+{# Summary header #}
+<div class="severity-cards">
+  <div class="sev-card sev-critical">
+    <div class="count">{{ counts.critical }}</div>
+    <div class="label">Crítico</div>
+  </div>
+  <div class="sev-card sev-high">
+    <div class="count">{{ counts.high }}</div>
+    <div class="label">Alto</div>
+  </div>
+  <div class="sev-card sev-medium">
+    <div class="count">{{ counts.medium }}</div>
+    <div class="label">Medio</div>
+  </div>
+  <div class="sev-card sev-low">
+    <div class="count">{{ counts.low }}</div>
+    <div class="label">Bajo</div>
+  </div>
+</div>
+
+{# Filters #}
+<form method="get" class="filter-bar">
+  <label>Severidad:
+    <select name="severity" onchange="this.form.submit()">
+      <option value="">Todas</option>
+      {% for val, label in severity_choices %}
+        <option value="{{ val }}" {% if severity_filter == val %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Regla:
+    <select name="rule_id" onchange="this.form.submit()">
+      <option value="">Todas</option>
+      {% for val, label in rule_choices %}
+        <option value="{{ val }}" {% if rule_filter == val %}selected{% endif %}>{{ val }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  {% if severity_filter or rule_filter or target_type_filter %}
+  <a href="{% url 'alerts:dashboard' %}" class="btn btn-secondary btn-sm">Limpiar</a>
+  {% endif %}
+</form>
+
+{# Alert list #}
+{% if alerts %}
+{% for alert in alerts %}
+<div class="alert-row" id="alert-{{ alert.id }}">
+  <span class="sev-badge {{ alert.severity }}">{{ alert.get_severity_display }}</span>
+
+  <div class="alert-body">
+    <div class="alert-rule">
+      {{ alert.get_rule_id_display }}
+      &nbsp;
+      <span class="status-badge {{ alert.status }}">{{ alert.get_status_display }}</span>
+    </div>
+    <div class="alert-meta">
+      Tipo: {{ alert.get_target_type_display }}
+      {% if alert.target_id %}&nbsp;&middot;&nbsp; ID: <code>{{ alert.target_id }}</code>{% endif %}
+      &nbsp;&middot;&nbsp; Visto: {{ alert.last_seen_at|date:"Y-m-d H:i" }}
+      {% if alert.acknowledged_by %}
+        &nbsp;&middot;&nbsp; Reconocido por {{ alert.acknowledged_by.display_name }}: <em>{{ alert.acknowledged_note|truncatechars:60 }}</em>
+      {% endif %}
+    </div>
+
+    {# Entity links by target type #}
+    {% if alert.target_id %}
+    <div class="alert-meta" style="margin-top:0.25rem;">
+      {% if alert.target_type == "person" %}
+        <a href="/inventory/persons/{{ alert.target_id }}/">Ver persona</a>
+      {% elif alert.target_type == "account" %}
+        <a href="/inventory/accounts/{{ alert.target_id }}/">Ver cuenta</a>
+      {% elif alert.target_type == "device" %}
+        <a href="/inventory/devices/{{ alert.target_id }}/">Ver dispositivo</a>
+      {% elif alert.target_type == "office" %}
+        <a href="/inventory/offices/{{ alert.target_id }}/">Ver oficina</a>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {# Acknowledge form (admin only, open/acknowledged alerts) #}
+    {% if request.operator.role == "administrator" and alert.status != "resolved" %}
+    <div class="ack-form" id="ack-form-{{ alert.id }}" style="display:none">
+      <form method="post" action="{% url 'alerts:acknowledge' alert.id %}">
+        {% csrf_token %}
+        <div class="ack-form-row">
+          <textarea name="note" placeholder="Nota obligatoria (mín. 5 caracteres)..." required minlength="5"></textarea>
+          <button type="submit" class="btn btn-primary btn-sm">Reconocer</button>
+        </div>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if request.operator.role == "administrator" and alert.status != "resolved" %}
+  <div class="alert-actions">
+    <button class="btn btn-secondary btn-sm"
+            onclick="document.getElementById('ack-form-{{ alert.id }}').style.display = document.getElementById('ack-form-{{ alert.id }}').style.display === 'none' ? 'block' : 'none'">
+      Reconocer
+    </button>
+  </div>
+  {% endif %}
+</div>
+{% endfor %}
+{% else %}
+<div class="empty-state">
+  Sin alertas activas
+  {% if severity_filter or rule_filter or target_type_filter %}para los filtros seleccionados{% endif %}.
+</div>
+{% endif %}
+{% endblock %}

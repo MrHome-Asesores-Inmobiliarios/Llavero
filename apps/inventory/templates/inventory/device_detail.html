@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block title %}{{ device }} - Llavero{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>{{ device }}</h1>
+  {% include "inventory/_state_badge.html" with state=device.state %}
+  <span class="spacer"></span>
+  {% if not viewer %}
+  <a class="btn btn-secondary" href="{% url 'device-edit' device.pk %}">Editar</a>
+  {% endif %}
+</div>
+
+<div class="card">
+  <div class="detail-grid">
+    <div class="detail-item">
+      <label>Hostname</label>
+      <span>{{ device.hostname|default:"-" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Tipo</label>
+      <span>{{ device.get_device_type_display }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Marca</label>
+      <span>{{ device.brand|default:"-" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Modelo</label>
+      <span>{{ device.model|default:"-" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Serial</label>
+      <span>{{ device.serial_number|default:"-" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Asset tag</label>
+      <span>{{ device.asset_tag|default:"-" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>CPU</label>
+      <span>{{ device.cpu|default:"-" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>RAM (GB)</label>
+      <span>{{ device.ram_gb|default:"-" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Almacenamiento</label>
+      <span>{% if device.storage_gb %}{{ device.storage_gb }} GB {{ device.storage_type }}{% else %}-{% endif %}</span>
+    </div>
+    <div class="detail-item">
+      <label>MACs</label>
+      <span>{{ device.mac_addresses|join:", "|default:"-" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>IPs</label>
+      <span>{{ device.ip_addresses|join:", "|default:"-" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Fecha de compra</label>
+      <span>{{ device.purchase_date|default:"-" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Garantia hasta</label>
+      <span>{{ device.warranty_expiry|default:"-" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Proveedor</label>
+      <span>{{ device.vendor|default:"-" }}</span>
+    </div>
+    {% if device.notes %}
+    <div class="detail-item" style="grid-column:1/-1;">
+      <label>Notas</label>
+      <span>{{ device.notes }}</span>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% if network_detail %}
+<div class="card">
+  <h3 style="margin-bottom:0.75rem;font-size:0.95rem;">Detalle de red</h3>
+  <div class="detail-grid">
+    <div class="detail-item">
+      <label>Firmware</label>
+      <span>{{ network_detail.firmware_version|default:"-" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Ultima actualizacion firmware</label>
+      <span>{{ network_detail.last_firmware_update|default:"-" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Metodo de monitoreo</label>
+      <span>{{ network_detail.get_monitoring_method_display }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Endpoint de monitoreo</label>
+      <span>{{ network_detail.monitoring_endpoint|default:"-" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>URL de gestion</label>
+      <span>{% if network_detail.management_url %}<a href="{{ network_detail.management_url }}" target="_blank">{{ network_detail.management_url }}</a>{% else %}-{% endif %}</span>
+    </div>
+    <div class="detail-item">
+      <label>Estado de salud</label>
+      <span>{{ network_detail.get_health_state_display }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Ultima vez visto</label>
+      <span>{{ network_detail.last_seen_at|default:"-" }}</span>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% if not viewer %}
+<div class="card">
+  <h3 style="margin-bottom:0.75rem;font-size:0.95rem;">Cambiar estado</h3>
+  <form method="post" action="{% url 'device-transition' device.pk %}">
+    {% csrf_token %}
+    <div style="display:flex;gap:0.5rem;align-items:center;">
+      <select name="new_state" style="padding:0.4rem 0.6rem;border:1px solid #d1d5db;border-radius:4px;font-size:0.875rem;">
+        <option value="in_use">in_use</option>
+        <option value="in_storage">in_storage</option>
+        <option value="pending_repair">pending_repair</option>
+        <option value="broken">broken</option>
+        <option value="decommissioned">decommissioned</option>
+      </select>
+      <button type="submit" class="btn btn-secondary btn-sm">Aplicar</button>
+    </div>
+  </form>
+</div>
+{% endif %}
+
+<div class="card">
+  <h3 style="margin-bottom:0.75rem;font-size:0.95rem;">Asignaciones</h3>
+  {% if assignments %}
+  <ul style="list-style:none;padding:0;">
+    {% for da in assignments %}
+    <li style="padding:0.3rem 0;border-bottom:1px solid #f3f4f6;">
+      <a href="{% url 'person-detail' da.person.pk %}">{{ da.person }}</a>
+      <span style="font-size:0.75rem;color:#6b7280;">({{ da.role }})</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p style="color:#6b7280;font-size:0.875rem;">Sin asignaciones activas.</p>
+  {% endif %}
+
+  <h3 style="margin:1rem 0 0.75rem;font-size:0.95rem;">Ubicacion</h3>
+  {% if locations %}
+  <ul style="list-style:none;padding:0;">
+    {% for dl in locations %}
+    <li style="padding:0.3rem 0;border-bottom:1px solid #f3f4f6;">
+      <a href="{% url 'office-detail' dl.office.pk %}">{{ dl.office }}</a>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p style="color:#6b7280;font-size:0.875rem;">Sin ubicacion registrada.</p>
+  {% endif %}
+
+  <h3 style="margin:1rem 0 0.75rem;font-size:0.95rem;">Cuentas configuradas</h3>
+  {% if account_configs %}
+  <ul style="list-style:none;padding:0;">
+    {% for ac in account_configs %}
+    <li style="padding:0.3rem 0;border-bottom:1px solid #f3f4f6;">
+      <a href="{% url 'account-detail' ac.account.pk %}">{{ ac.account }}</a>
+      <span style="font-size:0.75rem;color:#6b7280;">({{ ac.purpose }})</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p style="color:#6b7280;font-size:0.875rem;">Sin cuentas configuradas.</p>
+  {% endif %}
+
+  {% if dependencies %}
+  <h3 style="margin:1rem 0 0.75rem;font-size:0.95rem;">Dependencias</h3>
+  <ul style="list-style:none;padding:0;">
+    {% for dep in dependencies %}
+    <li style="padding:0.3rem 0;border-bottom:1px solid #f3f4f6;">
+      Depende de: <a href="{% url 'device-detail' dep.depends_on_device.pk %}">{{ dep.depends_on_device }}</a>
+      <span style="font-size:0.75rem;color:#6b7280;">({{ dep.nature }})</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+
+<p style="font-size:0.78rem;color:#9ca3af;margin-top:0.5rem;">
+  Creado: {{ device.created_at|date:"Y-m-d H:i" }} | Actualizado: {{ device.updated_at|date:"Y-m-d H:i" }}
+</p>
+{% endblock %}

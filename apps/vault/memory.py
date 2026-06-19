@@ -154,6 +154,26 @@ class SecureBuffer:
         raise TypeError("SecureBuffer cannot be copied")
 
 
+def get_system_mk() -> "SecureBuffer | None":
+    """Return the in-process MasterKeyHolder's buffer for system (non-HTTP) callers.
+
+    Used by management commands (e.g. run_integrations) that need the vault MK
+    without an active HTTP session. Returns None if the vault is locked.
+
+    This is intentionally separate from the HTTP-session holder to avoid coupling
+    the vault memory module to the session module.
+    """
+    try:
+        from apps.operators import sessions
+
+        if sessions.is_vault_unlocked():
+            # Borrow a transient bytes snapshot — never store it long-term
+            return sessions._holder().get_master_key()
+    except Exception:
+        pass
+    return None
+
+
 class MasterKeyHolder:
     """Holds the session master key in a SecureBuffer with idle auto-lock.
 

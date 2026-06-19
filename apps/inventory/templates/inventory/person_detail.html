@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block title %}{{ person.full_name }} - Llavero{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>{{ person.full_name }}</h1>
+  {% include "inventory/_state_badge.html" with state=person.state %}
+  <span class="spacer"></span>
+  {% if not viewer %}
+  <a class="btn btn-secondary" href="{% url 'person-edit' person.pk %}">Editar</a>
+  {% endif %}
+</div>
+
+<div class="tabs">
+  <a class="tab-link active" href="#detalles">Detalles</a>
+  <a class="tab-link" href="#relaciones">Relaciones</a>
+</div>
+
+<div class="card">
+  <div class="detail-grid">
+    <div class="detail-item">
+      <label>Nombre completo</label>
+      <span>{{ person.full_name }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Codigo interno</label>
+      <span>{{ person.internal_code|default:"-" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Puesto</label>
+      <span>{{ person.job_title|default:"-" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Departamento</label>
+      <span>{{ person.department|default:"-" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Email personal</label>
+      <span>{{ person.personal_email|default:"-" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Telefono</label>
+      <span>{{ person.phone|default:"-" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Extension</label>
+      <span>{{ person.extension|default:"-" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Fecha de ingreso</label>
+      <span>{{ person.hire_date|default:"-" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Fecha de salida</label>
+      <span>{{ person.exit_date|default:"-" }}</span>
+    </div>
+    {% if person.notes %}
+    <div class="detail-item" style="grid-column:1/-1;">
+      <label>Notas</label>
+      <span>{{ person.notes }}</span>
+    </div>
+    {% endif %}
+    {% for fd in custom_fields %}
+    <div class="detail-item">
+      <label>{{ fd.label }}</label>
+      <span>{{ person.custom_fields|default_if_none:""|default:"-" }}</span>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+{% if not viewer %}
+<div class="card" id="estado">
+  <h3 style="margin-bottom:0.75rem;font-size:0.95rem;">Cambiar estado</h3>
+  <form method="post" action="{% url 'person-transition' person.pk %}">
+    {% csrf_token %}
+    <div style="display:flex;gap:0.5rem;align-items:center;">
+      <select name="new_state" style="padding:0.4rem 0.6rem;border:1px solid #d1d5db;border-radius:4px;font-size:0.875rem;">
+        <option value="active">active</option>
+        <option value="suspended">suspended</option>
+        <option value="offboarding">offboarding</option>
+        <option value="terminated">terminated</option>
+      </select>
+      <button type="submit" class="btn btn-secondary btn-sm">Aplicar</button>
+    </div>
+  </form>
+</div>
+{% endif %}
+
+<div class="card" id="relaciones">
+  <h3 style="margin-bottom:0.75rem;font-size:0.95rem;">Cuentas asignadas</h3>
+  {% if account_ownerships %}
+  <ul style="list-style:none;padding:0;">
+    {% for ao in account_ownerships %}
+    <li style="padding:0.3rem 0;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;gap:0.5rem;">
+      <a href="{% url 'account-detail' ao.account.pk %}">{{ ao.account }}</a>
+      <span style="font-size:0.75rem;color:#6b7280;">({{ ao.role }})</span>
+      {% if not viewer %}
+      <form method="post" action="{% url 'link-end' ao.pk %}" style="margin:0;" hx-post="{% url 'link-end' ao.pk %}" hx-target="body">
+        {% csrf_token %}
+        <input type="hidden" name="link_type" value="account_ownership">
+        <button type="submit" class="btn btn-danger btn-sm">Terminar</button>
+      </form>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p style="color:#6b7280;font-size:0.875rem;">Sin cuentas asignadas.</p>
+  {% endif %}
+
+  <h3 style="margin:1rem 0 0.75rem;font-size:0.95rem;">Dispositivos asignados</h3>
+  {% if device_assignments %}
+  <ul style="list-style:none;padding:0;">
+    {% for da in device_assignments %}
+    <li style="padding:0.3rem 0;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;gap:0.5rem;">
+      <a href="{% url 'device-detail' da.device.pk %}">{{ da.device }}</a>
+      <span style="font-size:0.75rem;color:#6b7280;">({{ da.role }})</span>
+      {% if not viewer %}
+      <form method="post" action="{% url 'link-end' da.pk %}" style="margin:0;" hx-post="{% url 'link-end' da.pk %}" hx-target="body">
+        {% csrf_token %}
+        <input type="hidden" name="link_type" value="device_assignment">
+        <button type="submit" class="btn btn-danger btn-sm">Terminar</button>
+      </form>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p style="color:#6b7280;font-size:0.875rem;">Sin dispositivos asignados.</p>
+  {% endif %}
+
+  <h3 style="margin:1rem 0 0.75rem;font-size:0.95rem;">Oficinas</h3>
+  {% if office_memberships %}
+  <ul style="list-style:none;padding:0;">
+    {% for om in office_memberships %}
+    <li style="padding:0.3rem 0;border-bottom:1px solid #f3f4f6;">
+      <a href="{% url 'office-detail' om.office.pk %}">{{ om.office }}</a>
+      <span style="font-size:0.75rem;color:#6b7280;">({{ om.role }})</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p style="color:#6b7280;font-size:0.875rem;">Sin oficinas.</p>
+  {% endif %}
+</div>
+
+<p style="font-size:0.78rem;color:#9ca3af;margin-top:0.5rem;">
+  Creado: {{ person.created_at|date:"Y-m-d H:i" }} | Actualizado: {{ person.updated_at|date:"Y-m-d H:i" }}
+</p>
+{% endblock %}

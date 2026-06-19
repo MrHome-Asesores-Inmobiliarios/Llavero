@@ -23,6 +23,11 @@ class SecretOwnerType(models.TextChoices):
     INTEGRATION = "integration", "Integration"
 
 
+class SecretState(models.TextChoices):
+    ACTIVE = "active", "Active"
+    ARCHIVED = "archived", "Archived"
+
+
 class SecretKind(models.TextChoices):
     PASSWORD = "password", "Password"
     RECOVERY_CODES = "recovery_codes", "Recovery codes"
@@ -40,8 +45,10 @@ class SecretKind(models.TextChoices):
 class Secret(AuditedModel):
     OwnerType = SecretOwnerType
     Kind = SecretKind
+    State = SecretState
 
     owner_type = models.TextField(choices=SecretOwnerType.choices)
+    state = models.TextField(choices=SecretState.choices, default=SecretState.ACTIVE)
     owner_id = models.UUIDField()
     kind = models.TextField(choices=SecretKind.choices)
     label = models.TextField(blank=True, default="")
@@ -67,6 +74,10 @@ class Secret(AuditedModel):
             models.CheckConstraint(
                 condition=models.Q(kind__in=SecretKind.values),
                 name="secret_kind_valid",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(state__in=SecretState.values),
+                name="secret_state_valid",
             ),
         ]
 
