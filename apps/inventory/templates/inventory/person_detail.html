@@ -10,6 +10,14 @@
   {% endif %}
 </div>
 
+{% if request.operator and request.operator.role == "administrator" %}
+<div class="detail-actions">
+  <a href="/vault/new/?owner_type=person&owner_id={{ person.id }}" class="btn btn-secondary btn-sm">+ Secreto</a>
+  <a href="/inventory/accounts/new/?link_person={{ person.id }}" class="btn btn-secondary btn-sm">+ Cuenta vinculada</a>
+  <a href="/inventory/devices/new/?link_person={{ person.id }}" class="btn btn-secondary btn-sm">+ Dispositivo vinculado</a>
+</div>
+{% endif %}
+
 <div class="tabs">
   <a class="tab-link active" href="#detalles">Detalles</a>
   <a class="tab-link" href="#relaciones">Relaciones</a>

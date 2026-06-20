@@ -10,6 +10,12 @@
   {% endif %}
 </div>
 
+{% if request.operator and request.operator.role == "administrator" %}
+<div class="detail-actions">
+  <a href="/vault/new/?owner_type=account&owner_id={{ account.id }}" class="btn btn-secondary btn-sm">+ Secreto para esta cuenta</a>
+</div>
+{% endif %}
+
 <div class="card">
   <div class="detail-grid">
     <div class="detail-item">

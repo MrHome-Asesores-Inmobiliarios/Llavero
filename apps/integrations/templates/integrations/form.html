@@ -11,23 +11,23 @@
     {% csrf_token %}
     <div class="form-grid">
       <div class="form-row">
-        <label for="{{ form.name.id_for_label }}">Nombre</label>
+        <label for="{{ form.name.id_for_label }}">Nombre <span class="req">*</span></label>
         {{ form.name }}
         {% if form.name.errors %}<ul class="errorlist">{% for e in form.name.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
       </div>
       <div class="form-row">
-        <label for="{{ form.integration_type.id_for_label }}">Tipo</label>
+        <label for="{{ form.integration_type.id_for_label }}">Tipo <span class="req">*</span></label>
         {{ form.integration_type }}
         {% if form.integration_type.errors %}<ul class="errorlist">{% for e in form.integration_type.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
       </div>
       <div class="form-row">
-        <label for="{{ form.run_interval_minutes.id_for_label }}">Intervalo (minutos)</label>
+        <label for="{{ form.run_interval_minutes.id_for_label }}">Intervalo (minutos) <span class="req">*</span></label>
         {{ form.run_interval_minutes }}
         <span class="helptext">Con qué frecuencia ejecutar esta integración (mín. 1 minuto).</span>
         {% if form.run_interval_minutes.errors %}<ul class="errorlist">{% for e in form.run_interval_minutes.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
       </div>
       <div class="form-row">
-        <label for="{{ form.credential.id_for_label }}">Credencial del vault</label>
+        <label for="{{ form.credential.id_for_label }}">Credencial del vault <span class="opt">(opcional)</span></label>
         {{ form.credential }}
         <span class="helptext">Secreto del vault que contiene la credencial API. Solo se muestran secretos de tipo "integración" activos.</span>
         {% if form.credential.errors %}<ul class="errorlist">{% for e in form.credential.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
@@ -37,13 +37,13 @@
     <div class="form-row" style="margin-top:1rem;">
       <label>
         {{ form.enabled }}
-        Activa
+        Activa <span class="opt">(opcional)</span>
       </label>
       {% if form.enabled.errors %}<ul class="errorlist">{% for e in form.enabled.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
     </div>
 
     <div class="form-row">
-      <label for="{{ form.config.id_for_label }}">Configuración (JSON)</label>
+      <label for="{{ form.config.id_for_label }}">Configuración (JSON) <span class="opt">(opcional)</span></label>
       {{ form.config }}
       <span class="helptext">
         Objeto JSON con parámetros de endpoint. Ejemplos:<br>

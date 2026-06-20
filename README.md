@@ -58,6 +58,54 @@ Pre-commit hooks (black + ruff):
 pre-commit install
 ```
 
+## Usage
+
+### First login
+
+1. Open `http://localhost:8000/` — you will be redirected to `/auth/login/`.
+2. Enter your **username**, **password**, and the **6-digit TOTP code** from your authenticator app.
+3. **First-ever login (Administrator):** you will be asked to set the **vault passphrase**. Choose a long, unique phrase and record it physically — it encrypts every secret in the system.
+4. Subsequent logins: enter the vault passphrase to unlock the vault.
+
+### Inventory
+
+Navigate via the sidebar. Entities:
+
+| Entity | What it represents |
+|---|---|
+| **Personas** | Employees or contractors with user accounts |
+| **Cuentas** | User accounts (Microsoft 365, SSH, VPN, local, etc.) |
+| **Dispositivos** | Physical or virtual machines, network gear |
+| **Oficinas** | Physical office locations |
+
+Create a new entity with the **+ Nueva X** button on any list page. On a detail page, use the **contextual action strip** (visible to Administrators) to add related items in one click — for example, "+ Cuenta vinculada" from a Person page creates the account *and* links it to that person automatically.
+
+### Secrets
+
+1. Go to **Secretos** in the sidebar (or use a "+ Secreto" button on an entity's detail page).
+2. Select the **kind** (password, API key, certificate, SSH key, token, or custom).
+3. Enter the secret text. It is encrypted immediately — never stored in plaintext.
+4. To **reveal** a secret: open its detail page and click **Revelar**. The system will ask you to re-authenticate (step-up) with your password and TOTP code, then show the value for 30 seconds with a clipboard copy button.
+
+Only Administrators can reveal secrets. Viewers see only masked values and the vault key is never loaded into their session.
+
+### Relationships
+
+Entities are linked through typed relationships (account ownership, device assignment, recovery contacts, etc.). These appear on detail pages and can be created with the inline **+ Agregar** forms or via the contextual action buttons.
+
+### Alerts & dashboard
+
+The home page shows the alert dashboard. Alerts fire when one of 13 configured rules triggers (e.g. an account with no MFA, an unrecoverable device, a stale account). Click **Evaluar ahora** to run the engine on demand.
+
+Administrators can acknowledge an alert with a note. Alert thresholds are configurable under **Alertas → Configuración** (administrators only).
+
+### Session rules
+
+- Only **one active session** at a time, system-wide. A new login revokes any previous session.
+- The vault auto-locks after **15 minutes** of inactivity. You must enter the passphrase again to re-unlock.
+- Revealing or storing secrets requires a fresh **step-up re-authentication** every time.
+- **Viewers** are cryptographically keyless — the vault key is never loaded for a Viewer session, so they cannot decrypt secrets even with direct database access.
+
 ## Repository layout
 
 ```

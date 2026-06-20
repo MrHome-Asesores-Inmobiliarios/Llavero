@@ -34,12 +34,12 @@
   <form method="post">
     {% csrf_token %}
     <div class="form-row">
-      <label for="id_enabled">Habilitada</label>
+      <label for="id_enabled">Habilitada <span class="opt">(opcional)</span></label>
       {{ form.enabled }}
       {% if form.enabled.errors %}<ul class="errorlist">{% for e in form.enabled.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
     </div>
     <div class="form-row">
-      <label for="id_threshold_json">Umbral (JSON)</label>
+      <label for="id_threshold_json">Umbral (JSON) <span class="req">*</span></label>
       {{ form.threshold_json }}
       <p class="helptext">Ejemplo: <code>{"days": 90}</code>. Vacío para reglas sin umbral configurable.</p>
       {% if form.threshold_json.errors %}<ul class="errorlist">{% for e in form.threshold_json.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}

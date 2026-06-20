@@ -366,6 +366,20 @@ class AccountCreateView(View):
                     target_label=str(account),
                     changes={"label": account.label, "identifier": account.identifier},
                 )
+                # Auto-link to person if link_person query param provided
+                link_person_id = request.GET.get("link_person", "")
+                if link_person_id:
+                    try:
+                        person = Person.objects.get(pk=link_person_id)
+                        AccountOwnership.objects.create(
+                            person=person,
+                            account=account,
+                            role=AccountOwnership.Role.SHARED,
+                            created_by=request.operator,
+                            updated_by=request.operator,
+                        )
+                    except (Person.DoesNotExist, ValueError):
+                        pass
             return redirect("account-detail", pk=account.pk)
         return render(
             request,
@@ -549,6 +563,20 @@ class DeviceCreateView(View):
                     target_label=str(device),
                     changes={"device_type": device.device_type, "hostname": device.hostname},
                 )
+                # Auto-link to person if link_person query param provided
+                link_person_id = request.GET.get("link_person", "")
+                if link_person_id:
+                    try:
+                        person = Person.objects.get(pk=link_person_id)
+                        DeviceAssignment.objects.create(
+                            person=person,
+                            device=device,
+                            role=DeviceAssignment.Role.PRIMARY_USER,
+                            created_by=request.operator,
+                            updated_by=request.operator,
+                        )
+                    except (Person.DoesNotExist, ValueError):
+                        pass
             return redirect("device-detail", pk=device.pk)
         return render(
             request,

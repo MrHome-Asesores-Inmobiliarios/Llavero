@@ -155,8 +155,8 @@ class SecretCreateView(View):
     @require_admin
     def get(self, request):
         # owner_type + owner_id come from query params (linked from entity detail pages)
-        owner_type = request.GET.get("owner_type", SecretOwnerType.ACCOUNT)
-        owner_id = request.GET.get("owner_id", "")
+        initial_owner_type = request.GET.get("owner_type", "")
+        initial_owner_id = request.GET.get("owner_id", "")
         guard = _vault_unlocked_or_403(request)
         if guard:
             return guard
@@ -166,8 +166,8 @@ class SecretCreateView(View):
             "vault/secret_form.html",
             {
                 "form": form,
-                "owner_type": owner_type,
-                "owner_id": owner_id,
+                "initial_owner_type": initial_owner_type,
+                "initial_owner_id": initial_owner_id,
                 "title": "Nuevo secreto",
                 "owner_types": SecretOwnerType.choices,
             },
@@ -196,8 +196,8 @@ class SecretCreateView(View):
                 "vault/secret_form.html",
                 {
                     "form": form,
-                    "owner_type": owner_type,
-                    "owner_id": owner_id_str,
+                    "initial_owner_type": owner_type,
+                    "initial_owner_id": owner_id_str,
                     "title": "Nuevo secreto",
                     "owner_types": SecretOwnerType.choices,
                 },
